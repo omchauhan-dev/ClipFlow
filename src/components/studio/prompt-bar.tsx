@@ -106,38 +106,6 @@ export function PromptBar({ mode, isGenerating, onGenerate, onCancel }: PromptBa
 
             <div className="flex items-center justify-between gap-2 px-2 pb-1">
               <div className="flex items-center gap-1">
-                {/* Model Selector */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      disabled={isGenerating}
-                      className="h-9 px-3 text-muted hover:text-accent hover:bg-accent/10 rounded-xl transition-all gap-2"
-                    >
-                      <span className="text-[11px] font-bold uppercase tracking-tight">{selectedModel.name}</span>
-                      <ChevronDown className="w-3 h-3" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-56 bg-card border-border/10 p-1">
-                    {MODELS.map((model) => (
-                      <DropdownMenuItem
-                        key={model.id}
-                        onClick={() => setSelectedModel(model)}
-                        className="flex items-center justify-between px-3 py-2 text-xs rounded-lg focus:bg-accent focus:text-accent-foreground cursor-pointer"
-                      >
-                        <div className="flex flex-col">
-                          <span className="font-semibold">{model.name}</span>
-                          <span className="text-[10px] opacity-70">{model.desc}</span>
-                        </div>
-                        {selectedModel.id === model.id && <Check className="w-3 h-3" />}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-
-                <div className="w-px h-4 bg-border/20 mx-1" />
-
                 {needsImage && (
                   <>
                     <input 
@@ -161,6 +129,38 @@ export function PromptBar({ mode, isGenerating, onGenerate, onCancel }: PromptBa
               </div>
 
               <div className="flex items-center gap-2">
+                {/* Model Selector now positioned here, near the action buttons */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      disabled={isGenerating}
+                      className="h-9 px-3 text-muted hover:text-accent hover:bg-accent/10 rounded-xl transition-all gap-2"
+                    >
+                      <span className="text-[11px] font-bold uppercase tracking-tight">{selectedModel.name}</span>
+                      <ChevronDown className="w-3 h-3" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56 bg-card border-border/10 p-1">
+                    {MODELS.map((model) => (
+                      <DropdownMenuItem
+                        key={model.id}
+                        onClick={() => setSelectedModel(model)}
+                        className="flex items-center justify-between px-3 py-2 text-xs rounded-lg focus:bg-accent focus:text-accent-foreground cursor-pointer"
+                      >
+                        <div className="flex flex-col">
+                          <span className="font-semibold">{model.name}</span>
+                          <span className="text-[10px] opacity-70">{model.desc}</span>
+                        </div>
+                        {selectedModel.id === model.id && <Check className="w-3 h-3" />}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                <div className="w-px h-4 bg-border/20 mx-1" />
+
                 {isGenerating ? (
                   <Button
                     onClick={onCancel}
