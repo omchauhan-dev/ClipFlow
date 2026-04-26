@@ -1,3 +1,4 @@
+
 "use client";
 
 import { cn } from "@/lib/utils";
@@ -11,6 +12,7 @@ import {
   Smartphone, 
   Box 
 } from "lucide-react";
+import { motion } from "framer-motion";
 
 export type StudioMode = 
   | "talking-actor" 
@@ -50,14 +52,23 @@ export function ModeSelector({ activeMode, onChange }: ModeSelectorProps) {
                 key={mode.id}
                 onClick={() => onChange(mode.id as StudioMode)}
                 className={cn(
-                  "flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold transition-all duration-300 outline-none",
+                  "relative flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold transition-all duration-300 outline-none",
                   isActive 
-                    ? "bg-accent text-background shadow-accent-glow scale-105" 
+                    ? "text-background" 
                     : "bg-secondary text-muted hover:text-foreground hover:bg-card"
                 )}
               >
-                <Icon className={cn("w-3.5 h-3.5", isActive ? "text-background" : "text-muted")} />
-                {mode.label}
+                {isActive && (
+                  <motion.div
+                    layoutId="mode-bg"
+                    className="absolute inset-0 bg-accent rounded-full shadow-accent-glow"
+                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                  />
+                )}
+                <span className="relative z-10 flex items-center gap-2">
+                  <Icon className={cn("w-3.5 h-3.5", isActive ? "text-background" : "text-muted")} />
+                  {mode.label}
+                </span>
               </button>
             );
           })}
