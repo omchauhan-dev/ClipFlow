@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Paperclip, Play, X, StopCircle } from "lucide-react";
+import { Paperclip, Play, X, StopCircle, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { StudioMode } from "./mode-selector";
 import Image from "next/image";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface PromptBarProps {
   mode: StudioMode;
@@ -33,7 +34,6 @@ export function PromptBar({ mode, isGenerating, onGenerate, onCancel }: PromptBa
   const needsImage = ["talking-actor", "product"].includes(mode);
 
   useEffect(() => {
-    // Reset image if changing to a mode that doesn't need it
     if (!needsImage) setImage(null);
   }, [mode, needsImage]);
 
@@ -56,92 +56,115 @@ export function PromptBar({ mode, isGenerating, onGenerate, onCancel }: PromptBa
   return (
     <div className="w-full max-w-4xl mx-auto px-6 pb-8 pt-2">
       <div className="flex flex-col gap-3">
-        {image && (
-          <div className="relative w-20 h-20 rounded-xl overflow-hidden self-start border-2 border-accent/20 animate-in fade-in slide-in-from-bottom-2">
-            <Image src={image} alt="Upload preview" fill className="object-cover" />
-            <button 
-              onClick={() => setImage(null)}
-              className="absolute top-1 right-1 p-1 bg-background/80 hover:bg-background rounded-full text-foreground transition-colors"
+        <AnimatePresence>
+          {image && (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.8, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.8, y: 10 }}
+              className="relative w-20 h-20 rounded-xl overflow-hidden self-start border-2 border-accent/20 shadow-accent-glow"
             >
-              <X className="w-3 h-3" />
-            </button>
-          </div>
-        )}
+              <Image src={image} alt="Upload preview" fill className="object-cover" />
+              <button 
+                onClick={() => setImage(null)}
+                className="absolute top-1 right-1 p-1 bg-background/80 hover:bg-background rounded-full text-foreground transition-colors"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <div className={cn(
-          "relative bg-secondary p-2 rounded-2xl transition-all duration-300",
-          "focus-within:ring-1 focus-within:ring-accent focus-within:shadow-accent-glow"
+          "relative bg-secondary/80 backdrop-blur-sm border border-border/10 rounded-2xl transition-all duration-500",
+          "focus-within:ring-2 focus-within:ring-accent/20 focus-within:border-accent/40 focus-within:shadow-accent-glow"
         )}>
-          <div className="flex items-start gap-4 pr-1">
-            <div className="mt-3 ml-3 text-muted">
-              {/* Contextual Icon Display if needed */}
-            </div>
-            
+          <div className="flex flex-col p-2">
             <Textarea
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               placeholder={PLACEHOLDERS[mode]}
               disabled={isGenerating}
-              className="flex-1 min-h-[60px] max-h-[160px] bg-transparent border-none focus-visible:ring-0 resize-none py-4 text-sm font-medium"
+              className="min-h-[80px] max-h-[240px] bg-transparent border-none focus-visible:ring-0 resize-none py-3 px-4 text-sm font-medium placeholder:text-muted/50 leading-relaxed"
             />
 
-            <div className="flex items-center gap-2 py-2">
-              {needsImage && (
-                <>
-                  <input 
-                    type="file" 
-                    ref={fileInputRef} 
-                    className="hidden" 
-                    accept="image/*"
-                    onChange={handleFileChange}
-                  />
+            <div className="flex items-center justify-between gap-2 px-2 pb-1">
+              <div className="flex items-center gap-1">
+                {needsImage && (
+                  <>
+                    <input 
+                      type="file" 
+                      ref={fileInputRef} 
+                      className="hidden" 
+                      accept="image/*"
+                      onChange={handleFileChange}
+                    />
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isGenerating}
+                      className="h-9 w-9 text-muted hover:text-accent hover:bg-accent/10 rounded-xl transition-all"
+                    >
+                      <Paperclip className="w-4 h-4" />
+                    </Button>
+                  </>
+                )}
+                <div className="hidden sm:flex items-center gap-2 ml-2">
+                  <span className="text-[10px] text-muted font-medium uppercase tracking-widest opacity-50">
+                    {prompt.length}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {isGenerating ? (
                   <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isGenerating}
-                    className="h-10 w-10 text-muted hover:text-accent hover:bg-accent/10 rounded-xl transition-all"
+                    onClick={onCancel}
+                    variant="destructive"
+                    className="h-9 px-4 rounded-xl transition-all animate-in zoom-in font-bold text-xs gap-2"
                   >
-                    <Paperclip className="w-5 h-5" />
+                    <StopCircle className="w-3.5 h-3.5" />
+                    Cancel
                   </Button>
-                </>
-              )}
-
-              {isGenerating ? (
-                <Button
-                  onClick={onCancel}
-                  className="h-10 w-10 p-0 bg-card hover:bg-destructive hover:text-white rounded-xl transition-all animate-in zoom-in"
-                >
-                  <StopCircle className="w-5 h-5" />
-                </Button>
-              ) : (
-                <Button
-                  onClick={handleGenerate}
-                  disabled={!prompt.trim() && !image}
-                  className="h-10 px-6 bg-accent text-background hover:bg-accent/90 rounded-xl font-bold flex gap-2 green-gradient transition-all active:scale-95"
-                >
-                  <Play className="w-4 h-4 fill-current" />
-                  <span>Generate</span>
-                </Button>
-              )}
+                ) : (
+                  <Button
+                    onClick={handleGenerate}
+                    disabled={!prompt.trim() && (!needsImage || !image)}
+                    className="h-9 px-5 bg-accent text-background hover:bg-accent/90 rounded-xl font-bold flex gap-2 green-gradient transition-all active:scale-95 shadow-accent-glow border-none"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 fill-current" />
+                    <span>Generate</span>
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center justify-between px-4">
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="flex items-center justify-between px-4"
+        >
           <div className="flex items-center gap-4">
-            <span className="text-[10px] text-muted font-medium uppercase tracking-wider">
-              {prompt.length} Characters
-            </span>
-            <div className="flex items-center gap-1 text-[10px] bg-card px-2 py-0.5 rounded text-muted">
-               <span className="w-1 h-1 bg-accent rounded-full animate-pulse" />
-               ~45 sec on L40S
+            <div className="flex items-center gap-1.5 text-[10px] bg-card/50 px-2 py-1 rounded-full text-muted border border-border/5">
+               <div className={cn(
+                 "w-1.5 h-1.5 rounded-full",
+                 isGenerating ? "bg-accent animate-pulse" : "bg-muted/30"
+               )} />
+               {isGenerating ? "Processing on L40S Cluster" : "L40S Cluster Ready"}
             </div>
           </div>
-          <span className="text-[10px] text-accent/60 font-medium">
-            $0.028 / generation
-          </span>
-        </div>
+          <div className="flex items-center gap-3">
+            <span className="text-[9px] text-muted font-bold tracking-tighter uppercase opacity-40">
+              Est. ~45s
+            </span>
+            <span className="text-[9px] text-accent font-bold tracking-tighter uppercase">
+              $0.02 / Credit
+            </span>
+          </div>
+        </motion.div>
       </div>
     </div>
   );
