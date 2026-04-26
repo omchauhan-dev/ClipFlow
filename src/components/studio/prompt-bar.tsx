@@ -1,18 +1,33 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Paperclip, Play, X, StopCircle, Sparkles } from "lucide-react";
+import { Paperclip, X, StopCircle, Sparkles, ChevronDown, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { StudioMode } from "./mode-selector";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 
+const MODELS = [
+  { id: "ltx-2.3", name: "LTX-2.3", desc: "HD Lip Sync" },
+  { id: "ltx-2.2", name: "LTX-2.2", desc: "Fast Lip Sync" },
+  { id: "wan-2.2", name: "Wan 2.2", desc: "HD Scene Video" },
+  { id: "wan-2.1", name: "Wan 2.1", desc: "Fast Scene Video" },
+  { id: "flux-dev", name: "FLUX Dev", desc: "HD Image" },
+  { id: "musetalk", name: "MuseTalk", desc: "Fast Lip Sync" },
+];
+
 interface PromptBarProps {
   mode: StudioMode;
   isGenerating: boolean;
-  onGenerate: (prompt: string, image?: string) => void;
+  onGenerate: (prompt: string, image?: string, modelId?: string) => void;
   onCancel: () => void;
 }
 
@@ -29,6 +44,7 @@ const PLACEHOLDERS: Record<StudioMode, string> = {
 export function PromptBar({ mode, isGenerating, onGenerate, onCancel }: PromptBarProps) {
   const [prompt, setPrompt] = useState("");
   const [image, setImage] = useState<string | null>(null);
+  const [selectedModel, setSelectedModel] = useState(MODELS[0]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const needsImage = ["talking-actor", "product"].includes(mode);
@@ -50,7 +66,7 @@ export function PromptBar({ mode, isGenerating, onGenerate, onCancel }: PromptBa
 
   const handleGenerate = () => {
     if (!prompt.trim() && !image) return;
-    onGenerate(prompt, image || undefined);
+    onGenerate(prompt, image || undefined, selectedModel.id);
   };
 
   return (
@@ -90,6 +106,38 @@ export function PromptBar({ mode, isGenerating, onGenerate, onCancel }: PromptBa
 
             <div className="flex items-center justify-between gap-2 px-2 pb-1">
               <div className="flex items-center gap-1">
+                {/* Model Selector */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      disabled={isGenerating}
+                      className="h-9 px-3 text-muted hover:text-accent hover:bg-accent/10 rounded-xl transition-all gap-2"
+                    >
+                      <span className="text-[11px] font-bold uppercase tracking-tight">{selectedModel.name}</span>
+                      <ChevronDown className="w-3 h-3" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-56 bg-card border-border/10 p-1">
+                    {MODELS.map((model) => (
+                      <DropdownMenuItem
+                        key={model.id}
+                        onClick={() => setSelectedModel(model)}
+                        className="flex items-center justify-between px-3 py-2 text-xs rounded-lg focus:bg-accent focus:text-accent-foreground cursor-pointer"
+                      >
+                        <div className="flex flex-col">
+                          <span className="font-semibold">{model.name}</span>
+                          <span className="text-[10px] opacity-70">{model.desc}</span>
+                        </div>
+                        {selectedModel.id === model.id && <Check className="w-3 h-3" />}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                <div className="w-px h-4 bg-border/20 mx-1" />
+
                 {needsImage && (
                   <>
                     <input 
@@ -110,11 +158,6 @@ export function PromptBar({ mode, isGenerating, onGenerate, onCancel }: PromptBa
                     </Button>
                   </>
                 )}
-                <div className="hidden sm:flex items-center gap-2 ml-2">
-                  <span className="text-[10px] text-muted font-medium uppercase tracking-widest opacity-50">
-                    {prompt.length}
-                  </span>
-                </div>
               </div>
 
               <div className="flex items-center gap-2">
@@ -158,7 +201,7 @@ export function PromptBar({ mode, isGenerating, onGenerate, onCancel }: PromptBa
           </div>
           <div className="flex items-center gap-3">
             <span className="text-[9px] text-muted font-bold tracking-tighter uppercase opacity-40">
-              Est. ~45s
+              {prompt.length} chars
             </span>
             <span className="text-[9px] text-accent font-bold tracking-tighter uppercase">
               $0.02 / Credit

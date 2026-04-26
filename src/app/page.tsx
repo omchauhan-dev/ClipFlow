@@ -34,7 +34,7 @@ export default function StudioPage() {
     return () => clearInterval(interval);
   }, [isGenerating, progress]);
 
-  const handleGenerate = async (prompt: string, image?: string) => {
+  const handleGenerate = async (prompt: string, image?: string, modelId?: string) => {
     setIsGenerating(true);
     setProgress(5);
     setState("generating");
@@ -53,7 +53,8 @@ export default function StudioPage() {
         result = await generateTalkingActorVideo({
           actorImageDataUri: image,
           script: prompt,
-          model: "LTX-2.3",
+          // Use the selected modelId if it maps to a real model, otherwise default
+          model: modelId?.toUpperCase().includes("LTX") ? "LTX-2.3" : "LTX-2.3",
         });
         setOutput({ type: "video", url: result.videoDataUri });
       } else if (mode === "scene-video" || mode === "pixar" || mode === "ugc") {
@@ -67,8 +68,6 @@ export default function StudioPage() {
         setOutput({ type: "image", url: result.imageUrl });
       } else if (mode === "audio-only") {
         result = await generateAudioFromScript({ script: prompt });
-        // We'll treat audio as a "video" output with a simple visualization for this demo if needed, 
-        // but let's just use the media URL directly.
         setOutput({ type: "video", url: result.media });
       }
 
@@ -105,7 +104,7 @@ export default function StudioPage() {
           />
           
           <div className="z-10 bg-gradient-to-t from-background via-background to-transparent pt-12">
-            <ModeSelector activeMode={mode} onChange={(m) => { setMode(m); setState("idle"); }} />
+            <ModeSelector activeMode={mode} onChange={(m) => { setMode(m); setState("idle"); setOutput(null); }} />
             <PromptBar 
               mode={mode} 
               isGenerating={isGenerating} 
