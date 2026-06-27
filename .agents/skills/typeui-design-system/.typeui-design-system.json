@@ -1,0 +1,13 @@
+{
+  "designSystemId": "873f6e37-23a5-4535-8cfa-31fd76d7d83d",
+  "installScope": "project",
+  "skillFolderName": "typeui-design-system",
+  "slug": "brutalism-design-system",
+  "source": "workspace",
+  "templateSlug": "brutalism",
+  "type": "typeui-design-system",
+  "variant": "workspace",
+  "versionId": "3a3b908d-537a-4e47-86c1-1d2ae565d9ae",
+  "versionNumber": 1,
+  "workspaceId": "5a902b96-4cad-42d2-8692-ffeabfc779e2"
+}

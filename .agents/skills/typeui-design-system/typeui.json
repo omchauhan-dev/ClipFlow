@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "source": "workspace-visual-schema",
+  "name": "Brutalism Design System",
+  "slug": "brutalism-design-system",
+  "project": {
+    "name": "Brutalism",
+    "logoUrl": null
+  },
+  "importSource": {
+    "type": "manual",
+    "importedAt": "2026-06-20T15:11:50.824Z",
+    "sourceName": "TypeUI design skill: Brutalism"
+  },
+  "components": []
+}

@@ -1,0 +1,20 @@
+{
+  "name": "Arjun",
+  "description": "Young Indian male, mid-20s, short black hair, confident smile, athletic build, wearing a casual blue shirt, bright natural lighting",
+  "seed": 738291,
+  "image_url": null,
+  "created_at": null,
+  "attributes": {
+    "age": "mid-20s",
+    "gender": "male",
+    "ethnicity": "Indian",
+    "hair": "short black",
+    "build": "athletic",
+    "expression": "confident smile",
+    "clothing": "casual blue shirt",
+    "lighting": "bright natural",
+    "style": "modern casual"
+  },
+  "prompt_template": "Character Portrait: {name}, {description}, high quality, detailed face, 8k",
+  "scene_template": "Scene: {name} ({description}) {scenePrompt}, consistent character, high quality, 8k"
+}
