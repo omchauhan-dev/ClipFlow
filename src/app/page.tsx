@@ -1,13 +1,13 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase"
-import { motion, useScroll, useTransform } from "framer-motion"
+import { motion, useScroll, useTransform, useInView } from "framer-motion"
 import {
   Sparkles, Video, Image as ImageIcon, Mic, Wand2, ArrowRight,
   Zap, Globe, Check, ChevronRight, Paintbrush,
-  BotMessageSquare, Captions, Play,
+  BotMessageSquare, Captions, Play, Quote,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -23,10 +23,29 @@ const fadeUp = {
   transition: { duration: 0.7, ease },
 }
 
-const stagger = {
-  initial: { opacity: 0 },
-  whileInView: { opacity: 1 },
-  viewport: { once: true },
+function AnimatedCounter({ to, suffix = "" }: { to: number; suffix?: string }) {
+  const ref = useRef<HTMLSpanElement>(null)
+  const isInView = useInView(ref, { once: true })
+  const [val, setVal] = useState(0)
+
+  useEffect(() => {
+    if (!isInView) return
+    const duration = 1500
+    const start = performance.now()
+    const raf = requestAnimationFrame(function tick(now) {
+      const p = Math.min((now - start) / duration, 1)
+      const eased = 1 - Math.pow(1 - p, 3)
+      setVal(Math.floor(eased * to))
+      if (p < 1) requestAnimationFrame(tick)
+    })
+    return () => cancelAnimationFrame(raf)
+  }, [isInView, to])
+
+  return (
+    <span ref={ref}>
+      {val.toLocaleString()}{suffix}
+    </span>
+  )
 }
 
 export default function LandingPage() {
@@ -42,7 +61,6 @@ export default function LandingPage() {
   }, [])
 
   const primaryHref = authed ? "/projects" : "/login"
-  const primaryLabel = "Start Creating"
 
   const features = [
     { icon: Video, title: "Text to Video", desc: "Turn any prompt into a polished clip ready for social." },
@@ -66,7 +84,7 @@ export default function LandingPage() {
     <div className="min-h-screen bg-background text-foreground flex flex-col overflow-x-hidden">
       <SiteHeader />
 
-      {/* Hero — split layout */}
+      {/* Hero */}
       <motion.section style={{ scale: heroScale }} className="relative min-h-[100dvh] flex items-center overflow-hidden">
         <div className="pointer-events-none absolute inset-0">
           <div className="absolute top-1/2 -left-40 w-[600px] h-[600px] -translate-y-1/2 rounded-full bg-primary/8 blur-[200px]" />
@@ -75,7 +93,6 @@ export default function LandingPage() {
 
         <div className="relative w-full max-w-7xl mx-auto px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center pt-24 pb-16 lg:pt-20 lg:pb-20">
-            {/* Left: Content */}
             <motion.div
               initial={{ opacity: 0, x: -30 }}
               animate={{ opacity: 1, x: 0 }}
@@ -111,7 +128,7 @@ export default function LandingPage() {
                   <div className="absolute inset-0 bg-gradient-to-r from-primary via-emerald-400 to-primary opacity-0 group-hover:opacity-100 transition-opacity duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]" />
                   <span className="relative flex items-center gap-2">
                     <Wand2 className="w-4 h-4 transition-transform duration-300 group-hover:rotate-12" />
-                    {primaryLabel}
+                    Start Creating
                     <span className="w-7 h-7 rounded-full bg-primary-foreground/15 flex items-center justify-center group-hover:bg-primary-foreground/25 transition-colors duration-300">
                       <ArrowRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-0.5" />
                     </span>
@@ -127,7 +144,6 @@ export default function LandingPage() {
               </div>
             </motion.div>
 
-            {/* Right: Visual showcase */}
             <motion.div
               initial={{ opacity: 0, x: 30 }}
               animate={{ opacity: 1, x: 0 }}
@@ -145,7 +161,6 @@ export default function LandingPage() {
                   </div>
                 </div>
 
-                {/* Bottom bar */}
                 <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-background via-background/60 to-transparent" />
                 <div className="absolute bottom-4 left-5 right-5 flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
@@ -158,7 +173,6 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              {/* Stats row */}
               <div className="grid grid-cols-4 gap-2.5 mt-4">
                 {[
                   { v: "6+", l: "models" },
@@ -177,7 +191,64 @@ export default function LandingPage() {
         </div>
       </motion.section>
 
-      {/* Features — asymmetric bento */}
+      {/* Logo marquee */}
+      <section className="py-16 border-y border-border/10">
+        <motion.p
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          className="text-center text-[11px] uppercase tracking-[0.2em] text-muted-foreground/50 mb-8"
+        >
+          Used by creators at
+        </motion.p>
+        <div className="relative overflow-hidden mask-edges">
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className="flex gap-16 animate-marquee-left items-center"
+            style={{ width: "max-content", "--marquee-duration": "40s" } as React.CSSProperties}
+          >
+            {Array.from({ length: 2 }).map((_, setIdx) => (
+              <div key={setIdx} className="flex gap-16 items-center">
+                {["Vogue", "Nike", "Spotify", "Adobe", "Figma", "Notion", "Netflix", "Shopify"].map((name) => (
+                  <span key={`${setIdx}-${name}`} className="text-sm font-semibold text-muted-foreground/25 tracking-widest uppercase select-none">
+                    {name}
+                  </span>
+                ))}
+              </div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Stats bar */}
+      <section className="max-w-7xl mx-auto px-6 py-20 w-full">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+          {[
+            { to: 50000, label: "videos generated", suffix: "+" },
+            { to: 12000, label: "active creators", suffix: "+" },
+            { to: 3, label: "minutes avg render", suffix: "min" },
+            { to: 99, label: "uptime", suffix: "%" },
+          ].map((stat, i) => (
+            <motion.div
+              key={stat.label}
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, ease, delay: i * 0.08 }}
+              className="text-center"
+            >
+              <div className="text-3xl sm:text-4xl font-bold tracking-tight text-primary mb-1">
+                <AnimatedCounter to={stat.to} suffix={stat.suffix} />
+              </div>
+              <div className="text-xs text-muted-foreground uppercase tracking-widest">{stat.label}</div>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* Features */}
       <section id="features" className="max-w-7xl mx-auto px-6 py-28 lg:py-36 w-full">
         <motion.div {...fadeUp} className="max-w-2xl mb-16">
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight mb-4">
@@ -235,6 +306,56 @@ export default function LandingPage() {
               <div className="min-w-0">
                 <div className="text-sm font-semibold">{m.name}</div>
                 <div className="text-[12px] text-muted-foreground truncate">{m.desc}</div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className="max-w-7xl mx-auto px-6 py-28 lg:py-36 w-full">
+        <motion.div {...fadeUp} className="max-w-2xl mb-16">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight mb-4">
+            Trusted by creators worldwide
+          </h2>
+          <p className="text-muted-foreground text-base sm:text-lg leading-relaxed">
+            From solo creators to production teams.
+          </p>
+        </motion.div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          {[
+            {
+              quote: "ClipFlow cut our video production time from days to minutes. The avatar lip-sync is eerily good.",
+              author: "Sarah Chen",
+              role: "Content Lead, Buffer",
+            },
+            {
+              quote: "I generated an entire product launch campaign in under an hour. The Auto Agent planned everything.",
+              author: "Marcus Rivera",
+              role: "Independent Creator",
+            },
+          ].map((t, i) => (
+            <motion.div
+              key={t.author}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-60px" }}
+              transition={{ duration: 0.6, ease, delay: i * 0.1 }}
+              className="relative rounded-2xl border border-border/25 bg-gradient-to-b from-card/50 to-card/10 backdrop-blur p-8"
+            >
+              <Quote className="w-8 h-8 text-primary/20 mb-4" />
+              <p className="text-sm sm:text-base leading-relaxed mb-6 text-foreground/80">
+                &ldquo;{t.quote}&rdquo;
+              </p>
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center text-xs font-bold text-primary">
+                  {t.author.split(" ").map((n) => n[0]).join("")}
+                </div>
+                <div>
+                  <div className="text-sm font-semibold">{t.author}</div>
+                  <div className="text-xs text-muted-foreground">{t.role}</div>
+                </div>
               </div>
             </motion.div>
           ))}
@@ -312,7 +433,7 @@ export default function LandingPage() {
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-primary via-emerald-400 to-primary opacity-0 group-hover:opacity-100 transition-opacity duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]" />
                 <span className="relative flex items-center gap-2">
-                  {primaryLabel}
+                  Start Creating
                   <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
                 </span>
               </Button>
