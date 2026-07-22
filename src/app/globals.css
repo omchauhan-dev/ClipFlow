@@ -6,45 +6,34 @@
   :root {
     --background: 240 10% 4%;
     --foreground: 240 12% 96%;
-
     --card: 240 10% 7%;
     --card-foreground: 240 12% 96%;
-
     --popover: 240 10% 8%;
     --popover-foreground: 240 12% 96%;
-
-    --primary: 262 83% 62%;
+    --primary: 160 84% 39%;
     --primary-foreground: 0 0% 100%;
-
     --secondary: 240 6% 11%;
     --secondary-foreground: 240 10% 72%;
-
     --muted: 240 6% 13%;
     --muted-foreground: 240 5% 56%;
-
-    --accent: 262 83% 62%;
+    --accent: 160 84% 39%;
     --accent-foreground: 0 0% 100%;
-
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
-
     --border: 240 6% 15%;
     --input: 240 6% 13%;
-    --ring: 262 83% 62%;
-
-    --radius: 0.85rem;
-
+    --ring: 160 84% 39%;
+    --radius: 0.75rem;
     --sidebar-background: 240 10% 5%;
     --sidebar-foreground: 240 10% 72%;
-    --sidebar-primary: 262 83% 62%;
+    --sidebar-primary: 160 84% 39%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 240 6% 11%;
     --sidebar-accent-foreground: 240 12% 88%;
     --sidebar-border: 240 6% 15%;
-    --sidebar-ring: 262 83% 62%;
-
-    --chart-1: 262 83% 62%;
-    --chart-2: 290 70% 60%;
+    --sidebar-ring: 160 84% 39%;
+    --chart-1: 160 84% 39%;
+    --chart-2: 187 75% 42%;
     --chart-3: 220 70% 58%;
     --chart-4: 330 75% 60%;
     --chart-5: 30 80% 58%;
@@ -62,13 +51,13 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: var(--font-geist-sans), system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: var(--font-geist-sans), system-ui, sans-serif;
     font-weight: 600;
   }
 
@@ -76,17 +65,20 @@
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: hsl(240 6% 20%); border-radius: 3px; }
   ::-webkit-scrollbar-thumb:hover { background: hsl(240 6% 28%); }
-
-  ::selection { background: hsl(262 83% 62% / 0.25); }
+  ::selection { background: hsl(160 84% 39% / 0.25); }
 }
 
 @layer utilities {
-  .smooth { @apply transition-all duration-200 ease-out; }
+  .smooth { @apply transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]; }
 }
 
 @layer base {
   @keyframes fade-in {
     from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(24px); }
     to { opacity: 1; transform: translateY(0); }
   }
   @keyframes scale-in {
@@ -97,13 +89,9 @@
     from { opacity: 0; transform: translateY(16px); }
     to { opacity: 1; transform: translateY(0); }
   }
-  @keyframes slide-down {
-    from { opacity: 0; transform: translateY(-8px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
   @keyframes pulse-glow {
-    0%, 100% { box-shadow: 0 0 0 0 hsl(var(--primary) / 0.4); }
-    50% { box-shadow: 0 0 14px 4px hsl(var(--primary) / 0.18); }
+    0%, 100% { box-shadow: 0 0 0 0 hsl(var(--primary) / 0.3); }
+    50% { box-shadow: 0 0 20px 6px hsl(var(--primary) / 0.1); }
   }
   @keyframes shimmer {
     0% { background-position: -200% 0; }
@@ -112,10 +100,6 @@
   @keyframes marquee-left {
     from { transform: translateX(0); }
     to { transform: translateX(-50%); }
-  }
-  @keyframes marquee-right {
-    from { transform: translateX(-50%); }
-    to { transform: translateX(0); }
   }
   @keyframes float-y {
     0%, 100% { transform: translateY(0); }
@@ -126,32 +110,21 @@
     50% { background-position: 100% 50%; }
     100% { background-position: 0% 50%; }
   }
-  @keyframes grid-move {
-    0% { transform: translate(0, 0); }
-    100% { transform: translate(50px, 50px); }
-  }
   @keyframes glow-pulse {
-    0%, 100% { opacity: 0.4; transform: scale(1); }
-    50% { opacity: 0.8; transform: scale(1.05); }
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 0.6; }
   }
 
-  .animate-fade-in { animation: fade-in 0.3s ease-out both; }
-  .animate-scale-in { animation: scale-in 0.25s ease-out both; }
+  .animate-fade-in { animation: fade-in 0.4s ease-out both; }
+  .animate-fade-up { animation: fade-up 0.6s cubic-bezier(0.16,1,0.3,1) both; }
+  .animate-scale-in { animation: scale-in 0.3s ease-out both; }
   .animate-slide-up { animation: slide-up 0.4s ease-out both; }
-  .animate-slide-down { animation: slide-down 0.3s ease-out both; }
   .animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
   .animate-marquee-left { animation: marquee-left var(--marquee-duration, 60s) linear infinite; }
-  .animate-marquee-right { animation: marquee-right var(--marquee-duration, 60s) linear infinite; }
   .animate-float-y { animation: float-y 6s ease-in-out infinite; }
   .pause-on-hover:hover * { animation-play-state: paused; }
   .animate-gradient { background-size: 200% 200%; animation: gradient-shift 6s ease infinite; }
-  .animate-grid { animation: grid-move 20s linear infinite; }
   .animate-glow-pulse { animation: glow-pulse 3s ease-in-out infinite; }
-  .animate-shimmer {
-    background: linear-gradient(90deg, hsl(var(--secondary)) 25%, hsl(var(--muted)) 50%, hsl(var(--secondary)) 75%);
-    background-size: 200% 100%;
-    animation: shimmer 1.5s infinite;
-  }
 }
 
 select { color-scheme: dark; }
