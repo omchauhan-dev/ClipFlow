@@ -1,86 +1,88 @@
-import { redirect } from 'next/navigation';
+"use client"
 
-<<<<<<< Updated upstream
-export default function Home() {
-  redirect('/viral-hooks');
-=======
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
-import { motion } from 'framer-motion';
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { supabase } from "@/lib/supabase"
+import { motion } from "framer-motion"
 import {
   Sparkles, Video, Image as ImageIcon, Mic, Wand2, ArrowRight,
   Play, Zap, Layers, Globe, Check, Star, ChevronRight, Paintbrush,
-  BotMessageSquare, Captions
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { ImageMarquee } from '@/components/landing/image-marquee';
-import { SiteHeader } from '@/components/site-header';
-import { SiteFooter } from '@/components/site-footer';
-import { TextMarquee } from '@/components/text-marquee';
+  BotMessageSquare, Captions, Film, Volume2, Menu, Github, ExternalLink,
+} from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { ImageMarquee } from "@/components/landing/image-marquee"
+import { SiteHeader } from "@/components/site-header"
+import { SiteFooter } from "@/components/site-footer"
+import { TextMarquee } from "@/components/text-marquee"
 
 const fadeUp = {
   initial: { opacity: 0, y: 24 },
   whileInView: { opacity: 1, y: 0 },
-  viewport: { once: true, margin: '-60px' },
-};
+  viewport: { once: true, margin: "-60px" },
+}
 
 export default function LandingPage() {
-  const router = useRouter();
-  const [authed, setAuthed] = useState(false);
+  const router = useRouter()
+  const [authed, setAuthed] = useState(false)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setAuthed(!!session);
-    });
-  }, []);
+      setAuthed(!!session)
+    })
+  }, [])
 
-  const primaryHref = authed ? '/projects' : '/login';
-  const primaryLabel = authed ? 'Go to Projects' : 'Get Started Free';
+  const primaryHref = authed ? "/projects" : "/login"
+  const primaryLabel = authed ? "Go to Projects" : "Get Started Free"
 
   const features = [
-    { icon: Video, title: 'Text to Video', desc: 'Turn a prompt into a polished, scroll-stopping clip with state-of-the-art video models.' },
-    { icon: ImageIcon, title: 'AI Image Generation', desc: 'Generate product shots, characters, and scenes with crisp, legible on-image text.' },
-    { icon: Mic, title: 'Talking Avatars', desc: 'Bring a still image to life with natural voice and accurate lip-sync.' },
-    { icon: Layers, title: 'UGC Reels', desc: 'Compose influencer-style product reels end to end, ready for social.' },
-    { icon: Zap, title: 'Fast Generation', desc: 'GPU-accelerated pipelines deliver results in minutes, not hours.' },
-    { icon: Globe, title: 'Built for Creators', desc: 'Scripts, captions, hashtags, and voiceovers — the full content workflow.' },
-  ];
+    { icon: Video, title: "Text to Video", desc: "Turn a prompt into a polished, scroll-stopping clip with state-of-the-art video models." },
+    { icon: ImageIcon, title: "AI Image Generation", desc: "Generate product shots, characters, and scenes with crisp, legible on-image text." },
+    { icon: Mic, title: "Talking Avatars", desc: "Bring a still image to life with natural voice and accurate lip-sync." },
+    { icon: Layers, title: "UGC Reels", desc: "Compose influencer-style product reels end to end, ready for social." },
+    { icon: Zap, title: "Fast Generation", desc: "GPU-accelerated pipelines deliver results in minutes, not hours." },
+    { icon: Globe, title: "Built for Creators", desc: "Scripts, captions, hashtags, and voiceovers — the full content workflow." },
+  ]
+
+  const models = [
+    { icon: Paintbrush, name: "Ideogram 4", type: "Image", desc: "Text-to-image with excellent typography" },
+    { icon: Zap, name: "FLUX.2", type: "Image", desc: "Photorealistic image generation" },
+    { icon: Video, name: "LTX 2.3", type: "Video", desc: "Text & image-to-video" },
+    { icon: Mic, name: "LongCat Avatar", type: "Avatar", desc: "Lip-sync talking avatars" },
+    { icon: BotMessageSquare, name: "Auto Agent", type: "Agent", desc: "AI that plans & creates your content" },
+    { icon: Captions, name: "Voiceover", type: "Audio", desc: "ElevenLabs & OpenAI text-to-speech" },
+  ]
 
   const steps = [
-    { n: '01', title: 'Describe your idea', desc: 'Write a prompt or upload a reference image.' },
-    { n: '02', title: 'Generate', desc: 'Pick a mode and let the AI models do the heavy lifting.' },
-    { n: '03', title: 'Publish', desc: 'Download your clip and share it anywhere.' },
-  ];
+    { n: "01", title: "Describe your idea", desc: "Write a prompt or upload a reference image." },
+    { n: "02", title: "Generate", desc: "Pick a mode and let the AI models do the heavy lifting." },
+    { n: "03", title: "Publish", desc: "Download your clip and share it anywhere." },
+  ]
 
   const stats = [
-    { v: '6+', l: 'AI models' },
-    { v: '4K', l: 'max quality' },
-    { v: '<2 min', l: 'avg render' },
-    { v: '9:16', l: 'social-ready' },
-  ];
+    { v: "6+", l: "AI models" },
+    { v: "4K", l: "max quality" },
+    { v: "<2 min", l: "avg render" },
+    { v: "9:16", l: "social-ready" },
+  ]
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       <SiteHeader />
 
-      {/* ── Hero ── */}
+      {/* Hero */}
       <section className="relative overflow-hidden">
-        {/* Background glow orbs */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <div className="absolute -top-40 left-1/2 h-[600px] w-[600px] -translate-x-1/2 rounded-full bg-primary/10 blur-[150px] animate-glow-pulse" />
           <div className="absolute top-60 -left-40 h-[400px] w-[400px] rounded-full bg-blue-500/8 blur-[120px] animate-float-y" />
-          <div className="absolute top-80 -right-40 h-[350px] w-[350px] rounded-full bg-purple-500/8 blur-[120px]" style={{ animation: 'float-y 7s ease-in-out infinite reverse' }} />
+          <div className="absolute top-80 -right-40 h-[350px] w-[350px] rounded-full bg-purple-500/8 blur-[120px]" style={{ animation: "float-y 7s ease-in-out infinite reverse" }} />
         </div>
 
-        {/* Sliding image background */}
         <ImageMarquee />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-background/50 via-background/85 to-background" />
 
         <div className="relative max-w-5xl mx-auto px-6 pt-28 pb-24 text-center">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-            {/* Pill badge */}
             <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/8 backdrop-blur px-4 py-1.5 text-xs text-muted-foreground mb-8">
               <span className="relative flex h-2 w-2">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
@@ -89,7 +91,6 @@ export default function LandingPage() {
               AI video, images &amp; talking avatars
             </div>
 
-            {/* Headline */}
             <h1 className="text-4xl sm:text-6xl md:text-7xl font-bold tracking-tight leading-[1.04] mb-6">
               Create scroll-stopping
               <br />
@@ -103,23 +104,21 @@ export default function LandingPage() {
               The full creator workflow, powered by state-of-the-art models.
             </p>
 
-            {/* Buttons */}
             <div className="flex items-center justify-center gap-3 flex-wrap">
               <Button size="lg" onClick={() => router.push(primaryHref)} className="gap-2 h-12 px-7 text-sm shadow-lg shadow-primary/25 group">
                 <Wand2 className="w-4 h-4 transition-transform group-hover:rotate-12" />
                 {primaryLabel}
                 <ChevronRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
               </Button>
-              <Button size="lg" variant="outline" onClick={() => router.push('/pricing')} className="h-12 px-7 text-sm gap-2 bg-card/50 backdrop-blur border-border/50 hover:bg-card/70">
+              <Button size="lg" variant="outline" onClick={() => router.push("/pricing")} className="h-12 px-7 text-sm gap-2 bg-card/50 backdrop-blur border-border/50 hover:bg-card/70">
                 <Star className="w-4 h-4" />
                 See pricing
               </Button>
             </div>
 
-            <p className="text-xs text-muted-foreground mt-5">Free to get started · No credit card needed</p>
+            <p className="text-xs text-muted-foreground mt-5">Free to get started — No credit card needed</p>
           </motion.div>
 
-          {/* Stats */}
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
@@ -136,10 +135,10 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Scrolling text marquee ── */}
+      {/* Scrolling text marquee */}
       <TextMarquee />
 
-      {/* ── Features ── */}
+      {/* Features */}
       <section id="features" className="max-w-6xl mx-auto px-6 py-28 w-full">
         <motion.div {...fadeUp} transition={{ duration: 0.5 }} className="text-center mb-16">
           <Badge variant="outline" className="mb-4 border-primary/20 text-primary text-xs px-3 py-1">
@@ -157,7 +156,7 @@ export default function LandingPage() {
               key={f.title}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-40px' }}
+              viewport={{ once: true, margin: "-40px" }}
               transition={{ delay: i * 0.06, duration: 0.4 }}
               className="group relative rounded-2xl border border-border/40 bg-gradient-to-b from-card/60 to-card/20 backdrop-blur p-6 hover:border-primary/30 smooth"
             >
@@ -171,7 +170,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Models / Powered by ── */}
+      {/* Models */}
       <section className="max-w-5xl mx-auto px-6 py-24 w-full">
         <motion.div {...fadeUp} transition={{ duration: 0.5 }} className="text-center mb-12">
           <Badge variant="outline" className="mb-4 border-primary/20 text-primary text-xs px-3 py-1">
@@ -184,19 +183,12 @@ export default function LandingPage() {
         </motion.div>
 
         <div className="flex flex-wrap justify-center gap-3">
-          {([
-          { icon: Paintbrush, name: 'Ideogram 4', type: 'Image', desc: 'Text-to-image with excellent typography' },
-          { icon: Zap, name: 'FLUX.2', type: 'Image', desc: 'Photorealistic image generation' },
-          { icon: Video, name: 'LTX 2.3', type: 'Video', desc: 'Text & image-to-video' },
-          { icon: Mic, name: 'LongCat Avatar', type: 'Avatar', desc: 'Lip-sync talking avatars' },
-          { icon: BotMessageSquare, name: 'Auto Agent', type: 'Agent', desc: 'AI that plans & creates your content' },
-          { icon: Captions, name: 'Voiceover', type: 'Audio', desc: 'ElevenLabs & OpenAI text-to-speech' },
-          ] as const).map((m, i) => (
+          {models.map((m, i) => (
             <motion.div
               key={m.name}
               initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-40px' }}
+              viewport={{ once: true, margin: "-40px" }}
               transition={{ delay: i * 0.05, duration: 0.35 }}
               className="inline-flex items-center gap-3 rounded-xl border border-border/30 bg-gradient-to-b from-card/50 to-card/10 backdrop-blur px-5 py-3.5 hover:border-primary/25 hover:from-card/70 smooth"
             >
@@ -205,14 +197,14 @@ export default function LandingPage() {
               </div>
               <div className="text-left leading-tight">
                 <div className="text-sm font-semibold">{m.name}</div>
-                <div className="text-[11px] text-muted-foreground tracking-wide">{m.type} · {m.desc}</div>
+                <div className="text-[11px] text-muted-foreground tracking-wide">{m.type} — {m.desc}</div>
               </div>
             </motion.div>
           ))}
         </div>
       </section>
 
-      {/* ── Showcase strip ── */}
+      {/* Showcase strip */}
       <section className="relative py-24 overflow-hidden border-y border-border/30">
         <div className="pointer-events-none absolute inset-0 opacity-20">
           <ImageMarquee />
@@ -231,7 +223,7 @@ export default function LandingPage() {
         </motion.div>
       </section>
 
-      {/* ── How it works ── */}
+      {/* How it works */}
       <section id="how" className="max-w-5xl mx-auto px-6 py-28 w-full">
         <motion.div {...fadeUp} transition={{ duration: 0.5 }} className="text-center mb-16">
           <Badge variant="outline" className="mb-4 border-primary/20 text-primary text-xs px-3 py-1">
@@ -247,7 +239,7 @@ export default function LandingPage() {
               key={s.n}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-40px' }}
+              viewport={{ once: true, margin: "-40px" }}
               transition={{ delay: i * 0.1, duration: 0.4 }}
               className="relative rounded-2xl border border-border/40 bg-gradient-to-b from-card/50 to-card/10 backdrop-blur p-6 group hover:border-primary/30 smooth"
             >
@@ -264,7 +256,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── CTA ── */}
+      {/* CTA */}
       <section className="max-w-6xl mx-auto px-6 pb-28 w-full">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -273,7 +265,6 @@ export default function LandingPage() {
           transition={{ duration: 0.5 }}
         >
           <div className="relative overflow-hidden rounded-3xl border border-primary/15 bg-gradient-to-b from-card/80 to-card/30 backdrop-blur px-8 py-16 text-center">
-            {/* Decorative glow */}
             <div className="pointer-events-none absolute inset-0">
               <div className="absolute left-1/2 top-1/2 h-[400px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/10 blur-[130px]" />
               <div className="absolute left-1/4 top-0 h-[200px] w-[200px] rounded-full bg-blue-500/8 blur-[100px]" />
@@ -289,7 +280,7 @@ export default function LandingPage() {
                 Start creating today
               </h2>
               <p className="text-muted-foreground max-w-md mx-auto mb-8">
-                Join creators using Clipflow to produce videos and reels at the speed of thought.
+                Join creators using ClipFlow to produce videos and reels at the speed of thought.
               </p>
               <Button size="lg" onClick={() => router.push(primaryHref)} className="gap-2 h-12 px-8 text-sm shadow-lg shadow-primary/25 group">
                 {primaryLabel}
@@ -307,6 +298,5 @@ export default function LandingPage() {
 
       <SiteFooter />
     </div>
-  );
->>>>>>> Stashed changes
+  )
 }
