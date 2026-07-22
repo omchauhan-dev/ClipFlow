@@ -14,7 +14,7 @@ import { StudioSidebar } from '@/components/studio-sidebar';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ArrowLeft, Sparkles, Image as ImageIcon, Coins,
+  ArrowLeft, Image as ImageIcon, Coins,
   FileVideo, Download, X, Trash2, Play, Mic, ExternalLink,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -257,36 +257,22 @@ export default function StudioProjectPage() {
     <SidebarProvider>
       <div className="flex h-screen flex-col overflow-hidden bg-background flex-1">
         {/* Top bar */}
-        <header className="flex h-14 shrink-0 items-center border-b border-border/30 bg-background/60 backdrop-blur-xl px-4 sm:px-6">
+        <header className="flex h-14 shrink-0 items-center border-b border-border/20 px-4 sm:px-6">
           <div className="flex flex-1 items-center gap-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground"
+            <button
               onClick={() => router.push('/projects')}
+              className="h-8 w-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-card/50 transition-colors"
             >
               <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <div className="h-5 w-px bg-border/60" />
-            <div className="flex items-center gap-2.5">
-              <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5">
-                <Sparkles className="h-3.5 w-3.5 text-primary" />
-              </div>
-              <span className="max-w-[140px] truncate text-sm font-semibold sm:max-w-[260px]">{project?.name || '...'}</span>
-            </div>
+            </button>
+            <div className="h-4 w-px bg-border/40" />
+            <span className="text-sm font-semibold truncate max-w-[200px] sm:max-w-[320px]">{project?.name || '...'}</span>
           </div>
 
           <div className="flex items-center gap-3">
-            <Badge
-              variant="outline"
-              className="hidden sm:flex gap-1.5 py-1 text-[11px] text-muted-foreground border-border/40"
-            >
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              All systems go
-            </Badge>
             <button
               onClick={() => router.push('/account')}
-              className="flex items-center gap-1.5 rounded-lg border border-border/40 bg-card/50 hover:bg-card/80 transition-colors px-2.5 py-1.5"
+              className="flex items-center gap-1.5 rounded-lg border border-border/30 bg-card/40 hover:bg-card/60 transition-colors px-2.5 py-1.5"
             >
               <Coins className="h-3.5 w-3.5 text-amber-400" />
               <span className="text-sm font-semibold tabular-nums">{credits}</span>
@@ -305,7 +291,7 @@ export default function StudioProjectPage() {
             onCreditsChange={(b) => setCredits(b)}
             onShowUpgrade={() => setShowUpgrade(true)}
           />
-          <SidebarInset className="flex-1 min-w-0 overflow-hidden flex flex-col bg-gradient-to-b from-background via-background to-black/40">
+          <SidebarInset className="flex-1 min-w-0 overflow-hidden flex flex-col">
             <div
               className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8"
               onDragOver={(e) => e.preventDefault()}
@@ -332,36 +318,26 @@ export default function StudioProjectPage() {
                         initial={{ opacity: 0, scale: 0.95, y: 10 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                        className="relative aspect-square overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/[0.06] to-transparent shadow-lg shadow-primary/5"
+                        className="relative aspect-square overflow-hidden rounded-xl border border-border/25 bg-card/30"
                       >
-                        <div className="absolute inset-0 bg-[repeating-linear-gradient(45deg,transparent,transparent_4px,rgba(16,185,129,0.03)_4px,rgba(16,185,129,0.03)_8px)]" />
                         <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
-                          <motion.div
-                            className="flex h-12 w-12 items-center justify-center rounded-full border border-primary/20 bg-primary/[0.08]"
-                            animate={{ scale: [1, 1.08, 1] }}
-                            transition={{ repeat: Infinity, duration: 1.5, ease: 'easeInOut' }}
-                          >
+                          <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-border/30 bg-card/50">
                             {isVideoModel ? (
-                              <FileVideo className="h-5 w-5 text-primary" />
+                              <FileVideo className="h-4 w-4 text-muted-foreground" />
                             ) : (
-                              <ImageIcon className="h-5 w-5 text-primary" />
+                              <ImageIcon className="h-4 w-4 text-muted-foreground" />
                             )}
-                          </motion.div>
+                          </div>
                           <div className="text-center">
-                            <p className="text-sm font-medium">Creating...</p>
+                            <p className="text-sm font-medium text-foreground/80">Creating...</p>
                             <p className="text-[11px] text-muted-foreground mt-0.5">
                               {Math.floor(elapsed / 60)}:{String(elapsed % 60).padStart(2, '0')}
-                              {' · ~'}
-                              {isVideoModel ? '3-5 min' : '30s'}
                             </p>
                           </div>
                         </div>
-                        <Badge variant="secondary" className="absolute left-2.5 top-2.5 text-[10px] font-medium px-2 py-0.5">
-                          {isVideoModel ? 'Video' : 'Image'}
-                        </Badge>
                         <button
                           onClick={handleCancel}
-                          className="absolute right-2.5 top-2.5 rounded-lg bg-background/70 p-1.5 text-muted-foreground backdrop-blur transition-colors hover:text-destructive hover:bg-destructive/10"
+                          className="absolute right-2.5 top-2.5 rounded-lg bg-background/60 p-1.5 text-muted-foreground transition-colors hover:text-destructive"
                         >
                           <X className="h-3 w-3" />
                         </button>
@@ -396,11 +372,11 @@ export default function StudioProjectPage() {
                           whileTap={{ scale: 0.98 }}
                           onClick={() => (isCompleted ? setSelectedJob(isSelected ? null : job) : null)}
                           className={cn(
-                            'relative w-full overflow-hidden rounded-2xl border text-left shadow-lg transition-all duration-300',
+                            'relative w-full overflow-hidden rounded-xl border text-left transition-all duration-300',
                             isSelected
-                              ? 'border-primary/50 ring-2 ring-primary/20 shadow-primary/10'
-                              : 'border-border/50 hover:border-border hover:shadow-xl hover:shadow-black/20',
-                            isCompleted ? 'bg-black/40' : 'bg-card/30'
+                              ? 'border-primary/40 ring-1 ring-primary/15'
+                              : 'border-border/30 hover:border-border/60',
+                            isCompleted ? 'bg-black/30' : 'bg-card/20'
                           )}
                         >
                           {isCompleted ? (
@@ -410,61 +386,40 @@ export default function StudioProjectPage() {
                               ) : (
                                 <img src={url} alt="" className="aspect-square w-full object-cover" />
                               )}
-                              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                             </>
                           ) : (
-                            <div className="relative aspect-square w-full bg-gradient-to-br from-secondary/20 to-secondary/5">
+                            <div className="aspect-square w-full bg-card/10">
                               {isProcessing && (
-                                <div className="absolute inset-0 overflow-hidden">
-                                  <div className="absolute inset-0 bg-[repeating-linear-gradient(45deg,transparent,transparent_8px,rgba(255,255,255,0.02)_8px,rgba(255,255,255,0.02)_16px)]" />
-                                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent animate-shimmer" />
-                                </div>
+                                <div className="absolute inset-0 bg-card/5" />
                               )}
                             </div>
                           )}
 
-                          {!isCompleted && (
-                            <Badge
-                              variant={isProcessing ? 'secondary' : 'destructive'}
-                              className="absolute left-2.5 top-2.5 gap-1.5 text-[10px] font-medium px-2 py-0.5"
-                            >
-                              <span
-                                className={cn(
-                                  'h-1.5 w-1.5 rounded-full',
-                                  isProcessing ? 'animate-pulse bg-primary' : 'bg-destructive-foreground',
-                                )}
-                              />
-                              {isProcessing ? 'Generating' : 'Failed'}
-                            </Badge>
-                          )}
-
                           {isCompleted && (
                             <div className="absolute right-2.5 top-2.5 flex items-center gap-1">
-                              <div className="rounded-lg bg-black/50 backdrop-blur p-1.5">
+                              <div className="rounded-lg bg-black/60 p-1.5">
                                 {isVideo ? (
-                                  <Play className="h-3 w-3 text-white" />
+                                  <Play className="h-3 w-3 text-white/80" />
                                 ) : (
-                                  <ImageIcon className="h-3 w-3 text-white" />
+                                  <ImageIcon className="h-3 w-3 text-white/80" />
                                 )}
                               </div>
                             </div>
                           )}
 
-                          <div className="absolute right-2.5 top-2.5">
-                            {!isCompleted && (
+                          {!isCompleted && (
+                            <div className="absolute right-2.5 top-2.5">
                               <div
                                 onClick={(e) => { e.stopPropagation(); handleDeleteJob(job.id); }}
-                                className="rounded-lg bg-background/60 backdrop-blur p-1.5 text-muted-foreground cursor-pointer transition-colors hover:text-destructive hover:bg-destructive/10"
+                                className="rounded-lg bg-background/60 p-1.5 text-muted-foreground cursor-pointer transition-colors hover:text-destructive"
                               >
                                 <Trash2 className="h-3 w-3" />
                               </div>
-                            )}
-                          </div>
+                            </div>
+                          )}
 
-                          <div className="absolute bottom-0 left-0 right-0 p-2.5 bg-gradient-to-t from-black/80 via-black/40 to-transparent pt-6">
-                            <p className={cn('truncate text-[11px] leading-tight', isCompleted ? 'text-white/90' : 'text-muted-foreground')}>
-                              {job.prompt}
-                            </p>
+                          <div className="absolute bottom-0 left-0 right-0 p-2.5 bg-gradient-to-t from-black/70 via-black/30 to-transparent pt-6">
+                            <p className="truncate text-[11px] leading-tight text-white/70">{job.prompt}</p>
                           </div>
                         </motion.button>
                       </div>
@@ -501,7 +456,7 @@ export default function StudioProjectPage() {
 
             {/* Preview modal */}
             <Dialog open={!!selectedJob} onOpenChange={(o) => !o && setSelectedJob(null)}>
-              <DialogContent className="max-w-3xl border-border/30 bg-background/95 backdrop-blur-xl p-1 shadow-2xl">
+              <DialogContent className="max-w-3xl border-border/20 p-1">
                 {selectedJob && (
                   <>
                     <div className="overflow-hidden rounded-lg bg-black">
@@ -530,10 +485,10 @@ export default function StudioProjectPage() {
 
             {/* Upgrade dialog */}
             <Dialog open={showUpgrade} onOpenChange={setShowUpgrade}>
-              <DialogContent className="max-w-sm border-border/20 bg-background/95 backdrop-blur-xl p-6 text-center shadow-2xl">
+              <DialogContent className="max-w-sm border-border/20 p-6 text-center">
                 <DialogHeader>
-                  <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-500/20 to-amber-500/5 border border-amber-500/20">
-                    <Coins className="h-7 w-7 text-amber-400" />
+                  <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl border border-amber-500/20 bg-amber-500/10">
+                    <Coins className="h-6 w-6 text-amber-400" />
                   </div>
                   <DialogTitle className="text-lg font-bold">Out of credits</DialogTitle>
                   <DialogDescription className="text-sm text-muted-foreground mt-1">

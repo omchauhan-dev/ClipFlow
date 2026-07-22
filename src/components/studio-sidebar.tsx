@@ -76,13 +76,10 @@ function AgentAvatar({ state }: { state: 'idle' | 'thinking' | 'planning' | 'ref
 
   return (
     <div className={cn(
-      'relative flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border transition-all duration-300',
-      pulse ? 'border-primary/40 bg-primary/15' : 'border-border/50 bg-secondary/40',
+      'relative flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border transition-colors',
+      pulse ? 'border-primary/30 bg-primary/10' : 'border-border/40 bg-card/30',
     )}>
-      <Icon className={cn('h-4 w-4 transition-colors', colors[state])} />
-      {pulse && (
-        <span className="absolute inset-0 rounded-xl animate-ping bg-primary/10" />
-      )}
+      <Icon className={cn('h-4 w-4', colors[state])} />
     </div>
   );
 }
@@ -451,15 +448,12 @@ export function StudioSidebar({ selectedModel, onModelChange, agentLlm, onAgentL
         <div className="flex-1 overflow-y-auto px-3 py-2 space-y-3 scroll-smooth">
           {agentChat.length === 0 && !agentReply && !refineLog.length && (
             <div className="flex flex-col items-center justify-center h-full text-center px-4 py-12">
-              <div className="relative mb-4">
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-fuchsis-500/10 animate-pulse-glow">
-                  <Bot className="h-7 w-7 text-primary" />
-                </div>
-                <span className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full bg-emerald-500 border-2 border-background" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-border/30 bg-card/40 mb-4">
+                <Bot className="h-5 w-5 text-muted-foreground" />
               </div>
               <p className="text-sm font-medium text-foreground/80">What would you like to create?</p>
               <p className="text-xs text-muted-foreground mt-2 max-w-[200px] leading-relaxed">
-                I can help you plan and generate videos, images, and talking avatars — just describe your idea.
+                Describe your idea for videos, images, or avatars.
               </p>
             </div>
           )}
@@ -474,8 +468,8 @@ export function StudioSidebar({ selectedModel, onModelChange, agentLlm, onAgentL
                 style={{ animationDelay: `${i * 50}ms` }}
               >
                 {m.role === 'assistant' && (
-                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 mt-1">
-                    <Bot className="h-3.5 w-3.5 text-primary" />
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-card/40 border border-border/20 mt-1">
+                    <Bot className="h-3.5 w-3.5 text-foreground/70" />
                   </div>
                 )}
                 <div className={cn('text-sm leading-relaxed max-w-[85%]')}>
@@ -508,7 +502,7 @@ export function StudioSidebar({ selectedModel, onModelChange, agentLlm, onAgentL
 
           {agentThinking && (
             <div className="flex items-start gap-2.5 animate-fade-in">
-              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-amber-400/20 to-amber-400/5 mt-1">
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-card/40 border border-border/20 mt-1">
                 <Brain className="h-3.5 w-3.5 text-amber-400" />
               </div>
               <div className="rounded-2xl rounded-tl-md bg-secondary text-foreground border border-border/30 shadow-sm px-3.5 py-2.5">
@@ -529,7 +523,7 @@ export function StudioSidebar({ selectedModel, onModelChange, agentLlm, onAgentL
 
           {/* Refinement log */}
           {refineLog.length > 0 && (
-            <div className="rounded-xl border border-violet-400/20 bg-gradient-to-b from-violet-400/8 to-transparent p-3 animate-scale-in">
+            <div className="rounded-xl border border-violet-400/15 bg-card/30 p-3 animate-scale-in">
               <div className="flex items-center gap-2 mb-2.5">
                 <RefreshCw className={cn('h-4 w-4 text-violet-400', refinePass > 0 && refinePass <= 3 && 'animate-spin')} />
                 <p className="text-xs font-semibold text-violet-400">Iterative Refinement</p>
@@ -561,7 +555,7 @@ export function StudioSidebar({ selectedModel, onModelChange, agentLlm, onAgentL
 
           {agentReply && agentChat.length === 0 && !refineLog.length && (
             <div className="flex items-start gap-2.5 animate-fade-in">
-              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-400/20 to-emerald-400/5 mt-1">
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-card/40 border border-border/20 mt-1">
                 <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
               </div>
               <div className="rounded-2xl rounded-tl-md bg-secondary text-foreground border border-border/30 shadow-sm px-3.5 py-2.5 text-sm">
@@ -571,7 +565,7 @@ export function StudioSidebar({ selectedModel, onModelChange, agentLlm, onAgentL
           )}
 
           {agentPlan && !agentThinking && !agentExecuting && (
-            <div className="rounded-xl border border-primary/20 bg-gradient-to-b from-primary/8 to-transparent p-3.5 animate-scale-in">
+            <div className="rounded-xl border border-primary/15 bg-card/30 p-3.5 animate-scale-in">
               <div className="flex items-center gap-2 mb-2">
                 <Sparkles className="h-4 w-4 text-primary" />
                 <p className="text-sm font-semibold">{agentPlan.title || 'Creative Plan'}</p>
