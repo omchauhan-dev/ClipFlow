@@ -13,14 +13,10 @@ export default {
         xs: '480px',
       },
       fontFamily: {
-<<<<<<< Updated upstream
-        body: ['Inter', 'sans-serif'],
-        headline: ['Inter', 'sans-serif'],
-=======
         sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
         heading: ['Inter', 'sans-serif'],
         body: ['Inter', 'sans-serif'],
->>>>>>> Stashed changes
+        headline: ['Inter', 'sans-serif'],
         code: ['monospace'],
       },
       colors: {
@@ -57,14 +53,6 @@ export default {
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
-<<<<<<< Updated upstream
-=======
-        teal: {
-          DEFAULT: '#a78bfa',
-          dark: '#6d28d9',
-          light: '#c4b5fd',
-        },
->>>>>>> Stashed changes
         chart: {
           '1': 'hsl(var(--chart-1))',
           '2': 'hsl(var(--chart-2))',
