@@ -1,10 +1,21 @@
-import type {Metadata} from 'next';
+import type { Metadata } from 'next';
+import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 
+const geistSans = Geist({
+  subsets: ['latin'],
+  variable: '--font-geist-sans',
+});
+
+const geistMono = Geist_Mono({
+  subsets: ['latin'],
+  variable: '--font-geist-mono',
+});
+
 export const metadata: Metadata = {
-  title: 'Clipflow — AI Video & Image Studio',
-  description: 'Generate videos and images with state-of-the-art AI models.',
+  title: 'ClipFlow - AI Content Creation Studio',
+  description: 'Generate videos, images, talking avatars, and voiceovers from a single prompt.',
 };
 
 export default function RootLayout({
@@ -13,13 +24,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-      </head>
-      <body className="antialiased">
+    <html lang="en" suppressHydrationWarning className={`${geistSans.variable} ${geistMono.variable}`}>
+      <body className="antialiased font-sans">
         {children}
         <Toaster />
       </body>
