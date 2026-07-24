@@ -2,17 +2,17 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export const maxDuration = 30;
 
-// Subscription plans -> price in INR paise (smallest unit).
+// Subscription plans -> price in INR paise (smallest unit, ~1 USD = 99 INR).
 const PLAN_AMOUNTS: Record<string, { amount: number; label: string }> = {
-  starter: { amount: 1900 * 100, label: 'ClipFlow Starter' }, // ₹1900
-  pro: { amount: 3900 * 100, label: 'ClipFlow Pro' },          // ₹3900
+  starter: { amount: 1900 * 100, label: 'ClipFlow Starter' }, // ~$19
+  pro: { amount: 3900 * 100, label: 'ClipFlow Pro' },          // ~$39
 };
 
-// One-time credit packs -> { price in paise, credits granted (USD balance) }
+// One-time credit packs -> { price in paise, credits granted }
 const CREDIT_PACKS: Record<string, { amount: number; credits: number; label: string }> = {
-  pack_5: { amount: 400 * 100, credits: 5, label: '5 Credits' },     // ₹400 -> $5
-  pack_15: { amount: 1100 * 100, credits: 15, label: '15 Credits' }, // ₹1100 -> $15
-  pack_50: { amount: 3500 * 100, credits: 50, label: '50 Credits' }, // ₹3500 -> $50
+  pack_5: { amount: 400 * 100, credits: 5, label: '5 Credits' },     // ~$4
+  pack_15: { amount: 1100 * 100, credits: 15, label: '15 Credits' }, // ~$11
+  pack_50: { amount: 3500 * 100, credits: 50, label: '50 Credits' }, // ~$35
 };
 
 export async function POST(req: NextRequest) {

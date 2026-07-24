@@ -25,7 +25,7 @@ interface Plan {
 const PLANS: Plan[] = [
   {
     name: 'Free',
-    price: '₹0',
+    price: '$0',
     period: '/mo',
     description: 'Try it out',
     icon: Sparkles,
@@ -35,7 +35,7 @@ const PLANS: Plan[] = [
   },
   {
     name: 'Starter',
-    price: '₹1,900',
+    price: '$19',
     period: '/mo',
     description: 'For growing creators',
     icon: Zap,
@@ -52,7 +52,7 @@ const PLANS: Plan[] = [
   },
   {
     name: 'Pro',
-    price: '₹3,900',
+    price: '$39',
     period: '/mo',
     description: 'For power creators & teams',
     icon: Crown,
@@ -227,7 +227,7 @@ export default function PricingPage() {
         <div className="mt-10 text-center text-sm text-muted-foreground">
           <p>All plans include a 7-day money-back guarantee.</p>
           <p className="mt-2 text-xs text-muted-foreground/70">
-            🔒 Secure payments via Razorpay · Prices in INR
+            🔒 Secure payments · Prices in USD
           </p>
         </div>
       </div>
