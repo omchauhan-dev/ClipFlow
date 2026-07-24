@@ -11,7 +11,7 @@ export interface Credits {
 
 export const PLAN_LIMITS: Record<Plan, number> = {
   free: 10,
-  starter: 500,
+  starter: 50,
   pro: Infinity,
 };
 

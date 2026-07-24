@@ -52,14 +52,19 @@ export async function POST(req: NextRequest) {
             { user_id, plan, updated_at: new Date().toISOString() },
             { onConflict: 'user_id' }
           );
+          await supabase.from('profiles').update({ plan, updated_at: new Date().toISOString() }).eq('id', user_id);
         } else if (pack && PACK_CREDITS[pack]) {
           // add_credits is idempotent on payment_id to avoid double-grant
-          // (verify + webhook may both fire)
           await supabase.rpc('add_credits', {
             p_user_id: user_id,
             p_amount: PACK_CREDITS[pack],
             p_payment_id: razorpay_payment_id,
           });
+          // Sync purchased credits to profiles.credits_balance (the store the app reads from)
+          const { data: credRow } = await supabase.from('credits').select('balance').eq('user_id', user_id).single();
+          if (credRow?.balance != null) {
+            await supabase.from('profiles').update({ credits_balance: credRow.balance, updated_at: new Date().toISOString() }).eq('id', user_id);
+          }
         }
       }
     } catch (e) {

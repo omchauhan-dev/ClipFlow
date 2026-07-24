@@ -3,8 +3,9 @@ import { createClient } from '@supabase/supabase-js';
 
 export const maxDuration = 300;
 
+// Integer credit costs matching models.ts (image=1, video=2)
 const MODEL_COSTS: Record<string, number> = {
-  'ltx-2.3': 0.40, 'ltx': 0.40, 'wan': 0.80, 'flux': 0.20, 'flux1': 0.20, 'flux2': 0.30,
+  'ltx-2.3': 2, 'ltx': 2, 'wan': 2, 'flux': 1, 'flux1': 1, 'flux2': 1,
 };
 
 export async function POST(req: NextRequest) {
@@ -32,9 +33,9 @@ export async function POST(req: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const costPerItem = MODEL_COSTS[model] || 0.40;
+    const costPerItem = MODEL_COSTS[model] || 2;
     const discount = prompts.length >= 21 ? 0.8 : prompts.length >= 6 ? 0.9 : 1;
-    const totalCost = costPerItem * prompts.length * discount;
+    const totalCost = Math.ceil(costPerItem * prompts.length * discount);
 
     // Deduct credits atomically
     const { data: newBalance, error: creditError } = await supabase.rpc('deduct_credits', {

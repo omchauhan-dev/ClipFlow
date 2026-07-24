@@ -48,15 +48,20 @@ export async function POST(req: NextRequest) {
             { user_id: notes.user_id, plan: notes.plan, updated_at: new Date().toISOString() },
             { onConflict: 'user_id' }
           );
+          await supabase.from('profiles').update({ plan: notes.plan, updated_at: new Date().toISOString() }).eq('id', notes.user_id);
         }
         if (notes.credits) {
-          // top-up: add balance (idempotency guarded by payment id)
           try {
             await supabase.rpc('add_credits', {
               p_user_id: notes.user_id,
               p_amount: Number(notes.credits),
               p_payment_id: payment?.id || order?.id || null,
             });
+            // Sync to profiles.credits_balance
+            const { data: credRow } = await supabase.from('credits').select('balance').eq('user_id', notes.user_id).single();
+            if (credRow?.balance != null) {
+              await supabase.from('profiles').update({ credits_balance: credRow.balance, updated_at: new Date().toISOString() }).eq('id', notes.user_id);
+            }
           } catch (e) {
             console.warn('[Razorpay webhook] add_credits failed:', e);
           }
