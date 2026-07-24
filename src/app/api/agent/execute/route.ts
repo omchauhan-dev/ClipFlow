@@ -45,32 +45,33 @@ export async function POST(req: NextRequest) {
 
     const authHeader = req.headers.get('authorization');
     if (!authHeader) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    const db = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+    const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+    const db = createClient(SUPABASE_URL, SUPABASE_KEY);
     const { data: { user } } = await db.auth.getUser(authHeader.replace('Bearer ', ''));
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    // Calculate total cost
     const scenes = plan.scenes.filter((s) => (s.prompt || '').trim()).slice(0, 16);
     const totalCost = scenes.reduce((sum, s) => sum + (COST_PER_SCENE[s.kind || 'image'] || 1), 0);
 
-    // Deduct credits atomically
-    const { data: profile } = await db.from('profiles').select('credits_balance').eq('id', user.id).single();
-    const balance = profile?.credits_balance ?? 0;
-    if (balance < totalCost) {
-      return NextResponse.json({ error: 'Insufficient credits', balance: 0 }, { status: 402 });
+    const { data: newBalance, error: creditError } = await db.rpc('deduct_credits', {
+      p_user_id: user.id,
+      p_amount: totalCost,
+      p_description: `agent_execute:${project_id || 'direct'}`,
+    });
+
+    if (creditError) {
+      const msg = creditError.message || '';
+      if (msg.includes('insufficient_credits')) {
+        return NextResponse.json({ error: 'Insufficient credits', balance: 0, needed: totalCost }, { status: 402 });
+      }
+      return NextResponse.json({ error: msg }, { status: 500 });
     }
-    await db.from('profiles').update({
-      credits_balance: balance - totalCost,
-      updated_at: new Date().toISOString(),
-    }).eq('id', user.id);
 
     const origin = req.nextUrl.origin;
     const ar = AR[plan.aspect_ratio || '9:16'] || AR['9:16'];
 
-    // ── Chained movie mode ──
     if (chained) {
-      const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
       const COMFYUI_URL = process.env.COMFYUI_API_URL;
       if (!SUPABASE_URL || !SUPABASE_KEY || !COMFYUI_URL) {
         return NextResponse.json({ error: 'Missing environment variables' }, { status: 500 });
@@ -102,10 +103,9 @@ export async function POST(req: NextRequest) {
         }),
       });
 
-      return NextResponse.json({ jobs: jobIds, count: jobIds.length, chained: true, balance: balance - totalCost });
+      return NextResponse.json({ jobs: jobIds, count: jobIds.length, chained: true, balance: newBalance });
     }
 
-    // ── Default: one job per scene ──
     const jobs: string[] = [];
     for (const scene of scenes) {
       const prompt = (scene.prompt || '').trim();
@@ -132,7 +132,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    return NextResponse.json({ jobs, count: jobs.length, balance: balance - totalCost });
+    return NextResponse.json({ jobs, count: jobs.length, balance: newBalance });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'Unknown error';
     return NextResponse.json({ error: msg }, { status: 500 });

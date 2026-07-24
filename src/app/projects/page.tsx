@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { useCredits } from '@/hooks/use-credits';
 import {
   Plus, Clock, Trash2, Video, Wand2, ArrowRight, Loader2,
   Sparkles, FolderOpen, Film,
@@ -48,7 +49,7 @@ export default function ProjectsPage() {
   const [projectName, setProjectName] = useState('');
   const [creating, setCreating] = useState(false);
   const [activeJobs, setActiveJobs] = useState<ActiveJob[]>([]);
-  const [credits, setCredits] = useState<number | null>(null);
+  const { credits } = useCredits();
   const [deleteTarget, setDeleteTarget] = useState<Project | null>(null);
 
   const fetchProjects = useCallback(async (userId: string) => {
@@ -61,14 +62,6 @@ export default function ProjectsPage() {
     setLoading(false);
   }, []);
 
-  const fetchCredits = useCallback(async (userId: string) => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return;
-    const res = await fetch('/api/credits', { headers: { Authorization: `Bearer ${session.access_token}` } });
-    const { balance = 0 } = await res.json();
-    setCredits(balance);
-  }, []);
-
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) {
@@ -76,10 +69,9 @@ export default function ProjectsPage() {
       } else {
         setUser(session.user as SessionUser);
         fetchProjects(session.user.id);
-        fetchCredits(session.user.id);
       }
     });
-  }, [router, fetchProjects, fetchCredits]);
+  }, [router, fetchProjects]);
 
   useEffect(() => {
     if (!user) return;
@@ -142,16 +134,14 @@ export default function ProjectsPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <AppHeader user={user} credits={credits} onNewProject={() => setShowModal(true)} />
+      <AppHeader user={user} credits={credits?.balance ?? null} onNewProject={() => setShowModal(true)} />
 
-      {/* Decorative background glow */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div className="absolute -top-40 left-1/2 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-primary/8 blur-[150px]" />
         <div className="absolute top-60 -left-40 h-[300px] w-[300px] rounded-full bg-blue-500/5 blur-[100px]" />
       </div>
 
       <main className="relative mx-auto w-full max-w-6xl flex-1 px-6 py-12">
-        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -168,7 +158,6 @@ export default function ProjectsPage() {
           </p>
         </motion.div>
 
-        {/* Quick create */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -218,7 +207,7 @@ export default function ProjectsPage() {
                       onClick={() => router.push(`/studio/${project.id}`)}
                       className={cn(
                         'group cursor-pointer overflow-hidden border-border/40 bg-gradient-to-b from-card/60 to-card/10 backdrop-blur-sm p-0 transition-all hover:shadow-xl hover:shadow-black/20',
-                        job ? 'border-primary/30 ring-1 ring-primary/10' : 'hover:border-border/60'
+                        job ? 'border-primary/30 ring-1 ring-primary/10' : 'hover:border-border/60',
                       )}
                     >
                       <div className="relative flex aspect-video items-center justify-center overflow-hidden bg-gradient-to-br from-secondary/40 to-secondary/10">
@@ -250,10 +239,7 @@ export default function ProjectsPage() {
                             )}
                           </div>
                           <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setDeleteTarget(project);
-                            }}
+                            onClick={(e) => { e.stopPropagation(); setDeleteTarget(project); }}
                             className="rounded-lg p-1.5 opacity-0 transition-all hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
@@ -289,7 +275,6 @@ export default function ProjectsPage() {
         )}
       </main>
 
-      {/* Create modal */}
       <Dialog open={showModal} onOpenChange={setShowModal}>
         <DialogContent className="sm:max-w-md border-border/30 bg-background/95 backdrop-blur-xl">
           <DialogHeader>
@@ -308,9 +293,7 @@ export default function ProjectsPage() {
             autoFocus
           />
           <DialogFooter className="gap-2 sm:gap-0">
-            <Button variant="outline" onClick={() => setShowModal(false)} className="rounded-xl border-border/50">
-              Cancel
-            </Button>
+            <Button variant="outline" onClick={() => setShowModal(false)} className="rounded-xl border-border/50">Cancel</Button>
             <Button onClick={createProject} disabled={!projectName.trim() || creating} className="gap-1.5 rounded-xl shadow-sm shadow-primary/20">
               {creating && <Loader2 className="h-4 w-4 animate-spin" />}
               Create project
@@ -319,7 +302,6 @@ export default function ProjectsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete confirm */}
       <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
         <AlertDialogContent className="border-border/30 bg-background/95 backdrop-blur-xl">
           <AlertDialogHeader>
@@ -333,10 +315,7 @@ export default function ProjectsPage() {
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-2 sm:gap-0">
             <AlertDialogCancel className="rounded-xl border-border/50">Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmDelete}
-              className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm shadow-destructive/20"
-            >
+            <AlertDialogAction onClick={confirmDelete} className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm shadow-destructive/20">
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>

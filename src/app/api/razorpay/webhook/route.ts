@@ -4,19 +4,11 @@ import { createClient } from '@supabase/supabase-js';
 
 export const maxDuration = 30;
 
-// Razorpay webhook — the reliable source of truth for payment events.
-// Configure in Razorpay Dashboard: Settings -> Webhooks -> add URL
-//   https://<your-domain>/api/razorpay/webhook
-// subscribe to: payment.captured, order.paid
-// and set the webhook secret as RAZORPAY_WEBHOOK_SECRET.
 export async function POST(req: NextRequest) {
   try {
     const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
-    if (!webhookSecret) {
-      return NextResponse.json({ error: 'Webhook secret not configured' }, { status: 500 });
-    }
+    if (!webhookSecret) return NextResponse.json({ error: 'Webhook secret not configured' }, { status: 500 });
 
-    // Must verify against the RAW body
     const rawBody = await req.text();
     const signature = req.headers.get('x-razorpay-signature') || '';
 
@@ -31,8 +23,6 @@ export async function POST(req: NextRequest) {
 
     const event = JSON.parse(rawBody);
     const type = event?.event;
-
-    // Pull the order notes (plan / pack / user_id we set at order creation)
     const payment = event?.payload?.payment?.entity;
     const order = event?.payload?.order?.entity;
     const notes = payment?.notes || order?.notes || {};
@@ -44,10 +34,6 @@ export async function POST(req: NextRequest) {
         const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
         if (notes.plan) {
-          await supabase.from('credits').upsert(
-            { user_id: notes.user_id, plan: notes.plan, updated_at: new Date().toISOString() },
-            { onConflict: 'user_id' }
-          );
           await supabase.from('profiles').update({ plan: notes.plan, updated_at: new Date().toISOString() }).eq('id', notes.user_id);
         }
         if (notes.credits) {
@@ -57,11 +43,6 @@ export async function POST(req: NextRequest) {
               p_amount: Number(notes.credits),
               p_payment_id: payment?.id || order?.id || null,
             });
-            // Sync to profiles.credits_balance
-            const { data: credRow } = await supabase.from('credits').select('balance').eq('user_id', notes.user_id).single();
-            if (credRow?.balance != null) {
-              await supabase.from('profiles').update({ credits_balance: credRow.balance, updated_at: new Date().toISOString() }).eq('id', notes.user_id);
-            }
           } catch (e) {
             console.warn('[Razorpay webhook] add_credits failed:', e);
           }
@@ -69,7 +50,6 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Always 200 quickly so Razorpay doesn't retry unnecessarily
     return NextResponse.json({ ok: true });
   } catch (err: any) {
     return NextResponse.json({ error: err?.message || 'Unknown error' }, { status: 500 });

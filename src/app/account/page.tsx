@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { useCredits, PLAN_LIMITS } from '@/hooks/use-credits';
 import {
   Loader2, Crown, Zap, Sparkles, Coins, ArrowUpRight, Check, ArrowLeft,
 } from 'lucide-react';
@@ -18,14 +19,9 @@ import { cn } from '@/lib/utils';
 
 type Plan = 'free' | 'starter' | 'pro';
 
-interface CreditsRow {
-  plan: Plan;
-  balance: number;
-}
-
 const PLAN_META: Record<Plan, { name: string; icon: typeof Sparkles; monthly: number | null }> = {
-  free: { name: 'Free', icon: Sparkles, monthly: 10 },
-  starter: { name: 'Starter', icon: Zap, monthly: 50 },
+  free: { name: 'Free', icon: Sparkles, monthly: 50 },
+  starter: { name: 'Starter', icon: Zap, monthly: 200 },
   pro: { name: 'Pro', icon: Crown, monthly: null },
 };
 
@@ -44,27 +40,18 @@ interface SessionUser {
 export default function AccountPage() {
   const router = useRouter();
   const [user, setUser] = useState<SessionUser | null>(null);
-  const [credits, setCredits] = useState<CreditsRow | null>(null);
+  const { credits, loading: creditsLoading, refetch } = useCredits();
   const [loading, setLoading] = useState(true);
   const [buyOpen, setBuyOpen] = useState(false);
   const [buyingPack, setBuyingPack] = useState<string | null>(null);
 
-  const fetchCredits = useCallback(async (userId: string) => {
-    const { data } = await supabase.from('profiles').select('plan, credits_balance').eq('id', userId).single();
-    setCredits(data ? { plan: data.plan || 'free', balance: data.credits_balance ?? 0 } : { plan: 'free', balance: 0 });
-    setLoading(false);
-  }, []);
-
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
-        router.replace('/login');
-        return;
-      }
+      if (!session) { router.replace('/login'); return; }
       setUser(session.user as SessionUser);
-      fetchCredits(session.user.id);
+      setLoading(false);
     });
-  }, [router, fetchCredits]);
+  }, [router]);
 
   useEffect(() => {
     const id = 'razorpay-checkout-js';
@@ -119,7 +106,7 @@ export default function AccountPage() {
           const verify = await verifyRes.json();
           if (verify.verified) {
             setBuyOpen(false);
-            if (user) fetchCredits(user.id);
+            refetch();
           } else {
             alert('Payment could not be verified. If you were charged, contact support.');
           }
@@ -134,7 +121,7 @@ export default function AccountPage() {
     }
   }
 
-  if (loading) {
+  if (loading || creditsLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -142,7 +129,7 @@ export default function AccountPage() {
     );
   }
 
-  const plan = credits?.plan || 'free';
+  const plan: Plan = credits?.plan || 'free';
   const meta = PLAN_META[plan];
   const PlanIcon = meta.icon;
   const balance = credits?.balance ?? 0;
@@ -151,15 +138,10 @@ export default function AccountPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <AppHeader user={user} />
+      <AppHeader user={user} credits={balance} />
 
       <main className="mx-auto max-w-3xl px-6 py-10">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => router.push('/projects')}
-          className="mb-6 gap-1.5 text-muted-foreground"
-        >
+        <Button variant="ghost" size="sm" onClick={() => router.push('/projects')} className="mb-6 gap-1.5 text-muted-foreground">
           <ArrowLeft className="h-4 w-4" />
           Back to projects
         </Button>
@@ -167,7 +149,6 @@ export default function AccountPage() {
         <h1 className="mb-1 text-2xl font-bold tracking-tight">Account</h1>
         <p className="mb-8 text-sm text-muted-foreground">Manage your plan and credits.</p>
 
-        {/* Profile */}
         <Card className="mb-5 flex items-center gap-4 p-5">
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary text-lg font-medium">
             {(user?.user_metadata?.full_name?.[0] || 'U').toUpperCase()}
@@ -178,7 +159,6 @@ export default function AccountPage() {
           </div>
         </Card>
 
-        {/* Plan + credits */}
         <Card className="mb-5 p-6">
           <div className="mb-5 flex flex-col items-start gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="flex items-center gap-3">
@@ -192,14 +172,13 @@ export default function AccountPage() {
                   {plan !== 'free' && <Badge className="gap-1"><Check className="h-3 w-3" />Active</Badge>}
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  {plan === 'pro' ? 'Unlimited generations' : `${monthly} monthly credits`}
+                  {plan === 'pro' ? 'Unlimited generations' : `${monthly} credits per plan period`}
                 </p>
               </div>
             </div>
             {plan !== 'pro' && (
               <Button size="sm" className="gap-1.5" onClick={() => router.push('/pricing')}>
-                Upgrade
-                <ArrowUpRight className="h-3.5 w-3.5" />
+                Upgrade <ArrowUpRight className="h-3.5 w-3.5" />
               </Button>
             )}
           </div>
@@ -210,28 +189,19 @@ export default function AccountPage() {
                 <Coins className="h-4 w-4 text-primary" />
                 Credits remaining
               </span>
-              <span className="font-medium">
-                {balance}{monthly ? ` / ${monthly}` : ''}
-              </span>
+              <span className="font-medium">{balance}{monthly ? ` / ${monthly}` : ''}</span>
             </div>
             {monthly ? (
               <Progress value={100 - usedPct} className="h-2" />
             ) : (
               <p className="text-xs text-muted-foreground">Pro plan — generate without limits.</p>
             )}
-            <Button
-              variant="outline"
-              size="sm"
-              className="mt-4 w-full gap-1.5"
-              onClick={() => setBuyOpen(true)}
-            >
-              <Coins className="h-3.5 w-3.5" />
-              Buy credits
+            <Button variant="outline" size="sm" className="mt-4 w-full gap-1.5" onClick={() => setBuyOpen(true)}>
+              <Coins className="h-3.5 w-3.5" /> Buy credits
             </Button>
           </div>
         </Card>
 
-        {/* What a credit buys */}
         <Card className="p-6">
           <h3 className="mb-3 text-sm font-semibold">How credits work</h3>
           <ul className="flex flex-col gap-2 text-sm text-muted-foreground">
@@ -243,7 +213,6 @@ export default function AccountPage() {
         </Card>
       </main>
 
-      {/* Buy credits modal */}
       <Dialog open={buyOpen} onOpenChange={setBuyOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -258,7 +227,7 @@ export default function AccountPage() {
                 onClick={() => buyPack(pack.id)}
                 className={cn(
                   'flex items-center justify-between rounded-xl border p-4 text-left transition-colors',
-                  pack.popular ? 'border-primary/60 bg-primary/5' : 'border-border hover:border-border/80 hover:bg-secondary/40'
+                  pack.popular ? 'border-primary/60 bg-primary/5' : 'border-border hover:border-border/80 hover:bg-secondary/40',
                 )}
               >
                 <div className="flex items-center gap-3">
