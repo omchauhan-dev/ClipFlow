@@ -54,7 +54,7 @@ export default function StudioProjectPage() {
   const [credits, setCredits] = useState(0);
   const [voiceoverUrl, setVoiceoverUrl] = useState<string | null>(null);
   const [showUpgrade, setShowUpgrade] = useState(false);
-  const [agentLlm, setAgentLlm] = useState('meta-llama/llama-4-scout-17b-16e-instruct');
+
 
   const activeModel = getModel(selectedModel);
   const isVideoModel = activeModel.kind !== 'image';
@@ -299,11 +299,6 @@ export default function StudioProjectPage() {
           <StudioSidebar
             selectedModel={selectedModel}
             onModelChange={setSelectedModel}
-            agentLlm={agentLlm}
-            onAgentLlmChange={setAgentLlm}
-            onJobsCreated={() => { setIsGenerating(true); setGenerationStart(Date.now()); startPolling(); }}
-            onCreditsChange={(b) => setCredits(b)}
-            onShowUpgrade={() => setShowUpgrade(true)}
           />
           <SidebarInset className="flex-1 min-w-0 overflow-hidden flex flex-col bg-gradient-to-b from-background via-background to-black/40">
             <div
