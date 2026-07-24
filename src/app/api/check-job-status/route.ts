@@ -1,36 +1,23 @@
-<<<<<<< Updated upstream
-import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
-=======
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
->>>>>>> Stashed changes
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(req: Request) {
+export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
-  const id = searchParams.get('id');
+  const jobId = searchParams.get('id');
 
-<<<<<<< Updated upstream
-  if (!id) return NextResponse.json({ error: 'Missing ID' }, { status: 400 });
-=======
-    const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
->>>>>>> Stashed changes
+  if (!jobId) return NextResponse.json({ error: 'Missing ID' }, { status: 400 });
 
-  const { data, error } = await supabase
-    .from('jobs')
-    .select('*')
-    .eq('id', id)
-    .single();
+  const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!SUPABASE_URL || !SUPABASE_KEY) {
+    return NextResponse.json({ error: 'Server misconfigured' }, { status: 500 });
+  }
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-<<<<<<< Updated upstream
-  return NextResponse.json(data);
-}
-=======
+  try {
     const { data: job, error } = await supabase
       .from('jobs')
       .select('*')
@@ -49,9 +36,7 @@ export async function GET(req: Request) {
       output: outputUrl,
       created_at: job.created_at,
     });
-
   } catch (err: any) {
-    return NextResponse.json({ error: err?.message }, { status: 500 });
+    return NextResponse.json({ error: err?.message || 'Unknown error' }, { status: 500 });
   }
 }
->>>>>>> Stashed changes
