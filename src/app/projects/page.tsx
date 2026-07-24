@@ -134,7 +134,7 @@ export default function ProjectsPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <AppHeader user={user} credits={credits?.balance ?? null} onNewProject={() => setShowModal(true)} />
+      <AppHeader user={user} onNewProject={() => setShowModal(true)} />
 
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div className="absolute -top-40 left-1/2 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-primary/8 blur-[150px]" />

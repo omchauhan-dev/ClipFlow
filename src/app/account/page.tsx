@@ -138,7 +138,7 @@ export default function AccountPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <AppHeader user={user} credits={balance} />
+      <AppHeader user={user} />
 
       <main className="mx-auto max-w-3xl px-6 py-10">
         <Button variant="ghost" size="sm" onClick={() => router.push('/projects')} className="mb-6 gap-1.5 text-muted-foreground">

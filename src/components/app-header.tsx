@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { Plus, LogOut, User as UserIcon, CreditCard, Coins } from 'lucide-react';
 import { signOut } from '@/lib/supabase';
+import { useCredits } from '@/hooks/use-credits';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { BrandLogo } from '@/components/brand-logo';
@@ -17,12 +18,12 @@ import {
 
 interface AppHeaderProps {
   user?: { email?: string; user_metadata?: { full_name?: string; avatar_url?: string } } | null;
-  credits?: number | null;
   onNewProject?: () => void;
 }
 
-export function AppHeader({ user, credits, onNewProject }: AppHeaderProps) {
+export function AppHeader({ user, onNewProject }: AppHeaderProps) {
   const router = useRouter();
+  const { credits } = useCredits();
   const name = user?.user_metadata?.full_name || 'User';
   const initial = (name[0] || 'U').toUpperCase();
 
@@ -32,14 +33,14 @@ export function AppHeader({ user, credits, onNewProject }: AppHeaderProps) {
         <BrandLogo href="/projects" size="sm" />
 
         <div className="flex items-center gap-3">
-          {typeof credits === 'number' && (
+          {credits && typeof credits.balance === 'number' && (
             <Badge
               variant="secondary"
               className="cursor-pointer gap-1.5 py-1 font-medium"
               onClick={() => router.push('/account')}
             >
               <Coins className="h-3.5 w-3.5 text-primary" />
-              {credits} credits
+              {credits.balance} credits
             </Badge>
           )}
 
