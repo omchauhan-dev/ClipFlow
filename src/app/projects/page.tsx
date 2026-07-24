@@ -62,8 +62,11 @@ export default function ProjectsPage() {
   }, []);
 
   const fetchCredits = useCallback(async (userId: string) => {
-    const { data } = await supabase.from('profiles').select('credits_balance').eq('id', userId).single();
-    setCredits(data?.credits_balance ?? 0);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+    const res = await fetch('/api/credits', { headers: { Authorization: `Bearer ${session.access_token}` } });
+    const { balance = 0 } = await res.json();
+    setCredits(balance);
   }, []);
 
   useEffect(() => {

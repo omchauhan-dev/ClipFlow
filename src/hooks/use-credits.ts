@@ -20,25 +20,27 @@ export function useCredits() {
   const [loading, setLoading] = useState(true);
 
   async function fetchCredits() {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { setLoading(false); return; }
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) { setLoading(false); return; }
 
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('credits_balance, plan')
-      .eq('id', user.id)
-      .single();
+    // Use API route (service role) instead of direct client (anon key may hit RLS)
+    try {
+      const res = await fetch('/api/credits', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      const { balance = 0 } = await res.json();
 
-    if (error || !data) { setLoading(false); return; }
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('plan')
+        .eq('id', session.user.id)
+        .single();
 
-    const plan = (data.plan || 'free') as Plan;
-    const balance = data.credits_balance ?? 10;
-
-    setCredits({
-      plan,
-      balance,
-      can_generate: balance > 0,
-    });
+      const plan = (profile?.plan || 'free') as Plan;
+      setCredits({ plan, balance, can_generate: balance > 0 });
+    } catch {
+      /* silent */
+    }
     setLoading(false);
   }
 
