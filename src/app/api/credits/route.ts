@@ -29,10 +29,22 @@ export async function GET(req: NextRequest) {
   if (!user) return NextResponse.json({ balance: 0, plan: 'free' });
 
   const db = getDb();
-  const { data } = await db.from('profiles').select('credits_balance, plan').eq('id', user.id).single();
+  let { data } = await db.from('profiles').select('credits_balance, plan').eq('id', user.id).single();
+
+  if (!data) {
+    await db.from('profiles').insert({
+      id: user.id,
+      email: user.email,
+      name: user.user_metadata?.full_name || user.email,
+      credits_balance: 50,
+      plan: 'free',
+    });
+    data = { credits_balance: 50, plan: 'free' };
+  }
+
   return NextResponse.json({
-    balance: data?.credits_balance ?? 0,
-    plan: data?.plan ?? 'free',
+    balance: data.credits_balance ?? 0,
+    plan: data.plan ?? 'free',
   });
 }
 
@@ -47,20 +59,7 @@ export async function POST(req: NextRequest) {
 
   const db = getDb();
 
-  const { data: profile } = await db.from('profiles').select('credits_balance, plan').eq('id', user.id).single();
-  if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
-
-  const planLimit = PLAN_LIMITS[profile.plan] ?? PLAN_LIMITS.free;
-  if (profile.credits_balance + amount > planLimit) {
-    return NextResponse.json({
-      error: 'Plan limit exceeded',
-      plan: profile.plan,
-      limit: planLimit === Infinity ? 'unlimited' : planLimit,
-      balance: profile.credits_balance,
-    }, { status: 403 });
-  }
-
-  const { data: newBalance, error } = await db.rpc('deduct_credits', {
+  let { data: newBalance, error } = await db.rpc('deduct_credits', {
     p_user_id: user.id,
     p_amount: amount,
     p_description: description || null,
@@ -68,10 +67,28 @@ export async function POST(req: NextRequest) {
 
   if (error) {
     const msg = error.message || '';
-    if (msg.includes('insufficient_credits')) {
+    if (msg.includes('profile_not_found')) {
+      await db.from('profiles').insert({
+        id: user.id,
+        email: user.email,
+        name: user.user_metadata?.full_name || user.email,
+        credits_balance: 50,
+        plan: 'free',
+      });
+      const retry = await db.rpc('deduct_credits', {
+        p_user_id: user.id,
+        p_amount: amount,
+        p_description: description || null,
+      });
+      if (retry.error) {
+        return NextResponse.json({ error: retry.error.message }, { status: 500 });
+      }
+      newBalance = retry.data;
+    } else if (msg.includes('insufficient_credits')) {
       return NextResponse.json({ error: 'Insufficient credits', balance: 0 }, { status: 402 });
+    } else {
+      return NextResponse.json({ error: msg }, { status: 500 });
     }
-    return NextResponse.json({ error: msg }, { status: 500 });
   }
 
   return NextResponse.json({ success: true, balance: newBalance });
