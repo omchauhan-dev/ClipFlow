@@ -20,8 +20,11 @@ export default function LoginPage() {
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const redirect = params.get('redirect') || '/projects';
+    if (redirect) sessionStorage.setItem('login_redirect', redirect);
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) router.replace('/projects');
+      if (session) router.replace(redirect);
       else setChecking(false);
     });
   }, [router]);

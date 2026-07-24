@@ -1,6 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+const PUBLIC_ROUTES = ['/login', '/auth/callback', '/pricing', '/home', '/'];
+
 export async function middleware(req: NextRequest) {
+  const { pathname } = req.nextUrl;
+  if (PUBLIC_ROUTES.some((r) => pathname.startsWith(r))) {
+    return NextResponse.next();
+  }
+
+  if (
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/favicon') ||
+    pathname.startsWith('/api') ||
+    pathname.startsWith('/legal') ||
+    /\.\w+$/.test(pathname)
+  ) {
+    return NextResponse.next();
+  }
+
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
   const { createServerClient } = await import('@supabase/ssr');
@@ -20,7 +37,13 @@ export async function middleware(req: NextRequest) {
     },
   });
 
-  await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    const loginUrl = new URL('/login', req.url);
+    loginUrl.searchParams.set('redirect', pathname);
+    return NextResponse.redirect(loginUrl);
+  }
 
   return res;
 }
