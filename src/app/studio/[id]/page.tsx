@@ -10,8 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { PromptBar } from '@/components/studio/prompt-bar';
 import { EmptyCanvas } from '@/components/studio/empty-canvas';
 import { getModel, endpointFor, type GenModel } from '@/components/studio/models';
-import { StudioSidebar } from '@/components/studio-sidebar';
-import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
+
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, Sparkles, Image as ImageIcon, Coins,
@@ -254,10 +253,9 @@ export default function StudioProjectPage() {
   }
 
   return (
-    <SidebarProvider>
-      <div className="flex h-screen flex-col overflow-hidden bg-background flex-1">
-        {/* Top bar */}
-        <header className="flex h-14 shrink-0 items-center border-b border-border/30 bg-background/60 backdrop-blur-xl px-4 sm:px-6">
+    <div className="flex h-screen flex-col overflow-hidden bg-background">
+      {/* Top bar */}
+      <header className="flex h-14 shrink-0 items-center border-b border-border/30 bg-background/60 backdrop-blur-xl px-4 sm:px-6">
           <div className="flex flex-1 items-center gap-3">
             <Button
               variant="ghost"
@@ -295,14 +293,9 @@ export default function StudioProjectPage() {
         </header>
 
         {/* Canvas */}
-        <div className="flex flex-1 overflow-hidden">
-          <StudioSidebar
-            selectedModel={selectedModel}
-            onModelChange={setSelectedModel}
-          />
-          <SidebarInset className="flex-1 min-w-0 overflow-hidden flex flex-col bg-gradient-to-b from-background via-background to-black/40">
-            <div
-              className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8"
+        <div className="flex flex-1 flex-col bg-gradient-to-b from-background via-background to-black/40">
+          <div
+            className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8"
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => {
                 e.preventDefault();
@@ -564,9 +557,7 @@ export default function StudioProjectPage() {
                 />
               </div>
             </div>
-          </SidebarInset>
-        </div>
       </div>
-    </SidebarProvider>
+    </div>
   );
 }
