@@ -15,7 +15,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, Sparkles, Image as ImageIcon, Coins,
   FileVideo, Download, X, Trash2, Play, Mic, ExternalLink,
-  Grid3X3, Wand2, Copy, Check, Upload,
+  Grid3X3, Wand2, Copy, Check, Upload, Share2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -131,6 +131,36 @@ export default function StudioProjectPage() {
   const handleDeleteUploadedImage = async (imageId: string) => {
     await supabase.from('library_images').delete().eq('id', imageId);
     setUploadedImages((prev) => prev.filter((img) => img.id !== imageId));
+  };
+
+  const [sharingId, setSharingId] = useState<string | null>(null);
+
+  const handleShareToLibrary = async (job: Job) => {
+    const url = getJobUrl(job);
+    if (!url) return;
+    setSharingId(job.id);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      // Fetch the image and upload to R2 via API
+      const imageRes = await fetch(url);
+      const blob = await imageRes.blob();
+      const file = new File([blob], `shared_${job.id.slice(0, 8)}.png`, { type: 'image/png' });
+
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('userId', session.user.id);
+      formData.append('prompt', job.prompt || '');
+      formData.append('category', 'inspiration');
+      formData.append('tags', job.model || '');
+
+      await fetch('/api/library', { method: 'POST', body: formData });
+    } catch (error) {
+      console.error('Share failed:', error);
+    } finally {
+      setSharingId(null);
+    }
   };
 
   const startPolling = useCallback(async () => {
@@ -556,8 +586,21 @@ export default function StudioProjectPage() {
                                   }}
                                   className="rounded-md bg-white/10 backdrop-blur p-1 text-white hover:bg-white/20 transition-colors"
                                 >
-                                  {isCopied ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
+                                  {isCopied === job.id ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
                                 </button>
+                                {!isVideo && (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleShareToLibrary(job);
+                                    }}
+                                    disabled={sharingId === job.id}
+                                    className="rounded-md bg-white/10 backdrop-blur p-1 text-white hover:bg-white/20 transition-colors disabled:opacity-50"
+                                    title="Share to Inspiration Library"
+                                  >
+                                    <Share2 className="h-3 w-3" />
+                                  </button>
+                                )}
                               </div>
                             </div>
                             <div className="absolute left-2 top-2">
