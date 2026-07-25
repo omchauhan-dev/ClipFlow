@@ -1,0 +1,18 @@
+{
+  "267:266": {"inputs": {"text": "", "clip": ["200", 0]}, "class_type": "CLIPTextEncode"},
+  "267:257": {"inputs": {"value": 720}, "class_type": "IntPrimitive"},
+  "267:258": {"inputs": {"value": 1280}, "class_type": "IntPrimitive"},
+  "267:260": {"inputs": {"value": 25}, "class_type": "IntPrimitive"},
+  "267:225": {"inputs": {"value": 5}, "class_type": "IntPrimitive"},
+  "267:216": {"inputs": {"noise_seed": 42}, "class_type": "IntPrimitive"},
+  "267:237": {"inputs": {"noise_seed": 43}, "class_type": "IntPrimitive"},
+  "75": {"inputs": {"filename_prefix": "video/ltx_t2v", "images": ["76", 0]}, "class_type": "SaveImage"},
+  "76": {"inputs": {"vae": ["77", 0], "pixels": ["78", 0]}, "class_type": "VAEDecode"},
+  "77": {"inputs": {"vae_name": "LTX23_video_vae_bf16.safetensors"}, "class_type": "VAELoader"},
+  "78": {"inputs": {"samples": ["267:200", 0]}, "class_type": "VAEDecode"},
+  "200": {"inputs": {"clip_name": "gemma_3_12B_it_fp4_mixed.safetensors", "type": "ltxv"}, "class_type": "CLIPLoader"},
+  "267:200": {"inputs": {"model": ["267:150", 0], "positive": ["267:266", 0], "negative": ["267:300", 0], "latent_image": ["267:400", 0], "seed": ["267:216", 0], "steps": 30, "cfg": 1.0, "sampler": "euler", "scheduler": "simple", "denoise": 1.0}, "class_type": "KSampler"},
+  "267:150": {"inputs": {"unet_name": "ltx-2.3-22b-dev-fp8.safetensors"}, "class_type": "UNETLoader"},
+  "267:300": {"inputs": {"text": "bad quality, blurry, distorted", "clip": ["200", 0]}, "class_type": "CLIPTextEncode"},
+  "267:400": {"inputs": {"width": ["267:257", 0], "height": ["267:258", 0], "length": ["267:225", 0], "batch_size": 1}, "class_type": "EmptyLatentImage"}
+}

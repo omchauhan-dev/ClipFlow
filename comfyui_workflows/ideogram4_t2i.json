@@ -1,0 +1,16 @@
+{
+  "98:24": {"inputs": {"text": "", "clip": ["200", 0]}, "class_type": "CLIPTextEncode"},
+  "98:27": {"inputs": {"value": 1024}, "class_type": "IntPrimitive"},
+  "98:28": {"inputs": {"value": 1024}, "class_type": "IntPrimitive"},
+  "98:18": {"inputs": {"noise_seed": 42}, "class_type": "IntPrimitive"},
+  "98:17": {"inputs": {"steps": 20, "mu": 0.0, "std": 1.75}, "class_type": "FlowMatchEuler"},
+  "9": {"inputs": {"filename_prefix": "ideogram4", "images": ["10", 0]}, "class_type": "SaveImage"},
+  "10": {"inputs": {"vae": ["3", 0], "samples": ["5", 0]}, "class_type": "VAEDecode"},
+  "5": {"inputs": {"model": ["4", 0], "positive": ["6", 0], "negative": ["7", 0], "latent_image": ["98:27", 0], "seed": ["98:18", 0], "steps": ["98:17", 0], "cfg": 1.0, "sampler": "euler", "scheduler": "simple", "denoise": 1.0}, "class_type": "KSampler"},
+  "6": {"inputs": {"conditioning": ["98:24", 0]}, "class_type": "ConditioningCombine"},
+  "7": {"inputs": {"conditioning": ["8", 0]}, "class_type": "ConditioningCombine"},
+  "8": {"inputs": {"text": "bad quality, blurry", "clip": ["200", 0]}, "class_type": "CLIPTextEncode"},
+  "4": {"inputs": {"ckpt_name": "ideogram4_fp8_scaled.safetensors"}, "class_type": "CheckpointLoaderSimple"},
+  "3": {"inputs": {"vae_name": "flux2-vae.safetensors"}, "class_type": "VAELoader"},
+  "200": {"inputs": {"clip_name": "qwen3vl_8b_fp8_scaled.safetensors", "type": "ltxv"}, "class_type": "CLIPLoader"}
+}

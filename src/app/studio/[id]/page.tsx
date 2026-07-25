@@ -15,6 +15,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, Sparkles, Image as ImageIcon, Coins,
   FileVideo, Download, X, Trash2, Play, Mic, ExternalLink,
+  Grid3X3, Wand2, Copy, Check,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -53,6 +54,8 @@ export default function StudioProjectPage() {
   const [credits, setCredits] = useState(0);
   const [voiceoverUrl, setVoiceoverUrl] = useState<string | null>(null);
   const [showUpgrade, setShowUpgrade] = useState(false);
+  const [activeTab, setActiveTab] = useState<'generate' | 'library'>('generate');
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
 
   const activeModel = getModel(selectedModel);
@@ -274,6 +277,39 @@ export default function StudioProjectPage() {
             </div>
           </div>
 
+          {/* Tab toggle */}
+          <div className="flex items-center gap-1 rounded-xl border border-border/40 bg-card/50 p-1">
+            <button
+              onClick={() => setActiveTab('generate')}
+              className={cn(
+                'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-all',
+                activeTab === 'generate'
+                  ? 'bg-primary/10 text-primary shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              <Wand2 className="h-3 w-3" />
+              Generate
+            </button>
+            <button
+              onClick={() => setActiveTab('library')}
+              className={cn(
+                'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-all',
+                activeTab === 'library'
+                  ? 'bg-primary/10 text-primary shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              <Grid3X3 className="h-3 w-3" />
+              Library
+              {jobs.filter(j => j.status === 'completed' && getJobUrl(j)).length > 0 && (
+                <span className="ml-0.5 rounded-full bg-primary/20 px-1.5 py-0.5 text-[10px] tabular-nums">
+                  {jobs.filter(j => j.status === 'completed' && getJobUrl(j)).length}
+                </span>
+              )}
+            </button>
+          </div>
+
           <div className="flex items-center gap-3">
             <Badge
               variant="outline"
@@ -292,8 +328,97 @@ export default function StudioProjectPage() {
           </div>
         </header>
 
-        {/* Canvas */}
+        {/* Canvas / Library */}
         <div className="flex flex-1 flex-col bg-gradient-to-b from-background via-background to-black/40">
+          {activeTab === 'library' ? (
+            /* Library view */
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+              <div className="mx-auto w-full max-w-6xl">
+                {jobs.filter(j => j.status === 'completed' && getJobUrl(j)).length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-20 text-center">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-secondary/20 mb-4">
+                      <Grid3X3 className="h-7 w-7 text-muted-foreground" />
+                    </div>
+                    <p className="text-sm font-medium text-muted-foreground">No generated content yet</p>
+                    <p className="text-xs text-muted-foreground/60 mt-1">Switch to Generate to create your first image</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                    {jobs
+                      .filter(j => j.status === 'completed' && getJobUrl(j))
+                      .map((job) => {
+                        const url = getJobUrl(job);
+                        const isVideo = url.endsWith('.mp4') || job.job_type === 'video';
+                        const isCopied = copiedId === job.id;
+                        return (
+                          <motion.div
+                            key={job.id}
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="group relative overflow-hidden rounded-xl border border-border/40 bg-card/30 shadow-lg hover:border-border hover:shadow-xl transition-all"
+                          >
+                            <div className="aspect-square overflow-hidden bg-black/20">
+                              {isVideo ? (
+                                <video
+                                  src={url}
+                                  className="h-full w-full object-cover"
+                                  onMouseEnter={(e) => (e.target as HTMLVideoElement).play()}
+                                  onMouseLeave={(e) => { (e.target as HTMLVideoElement).pause(); (e.target as HTMLVideoElement).currentTime = 0; }}
+                                  loop
+                                  muted
+                                />
+                              ) : (
+                                <img src={url} alt="" className="h-full w-full object-cover" />
+                              )}
+                            </div>
+                            {/* Hover overlay */}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-2.5">
+                              <p className="truncate text-[10px] text-white/80 mb-2 leading-tight">{job.prompt}</p>
+                              <div className="flex items-center gap-1">
+                                <button
+                                  onClick={() => setSelectedJob(job)}
+                                  className="flex-1 rounded-md bg-white/10 backdrop-blur px-2 py-1 text-[10px] text-white hover:bg-white/20 transition-colors"
+                                >
+                                  View
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    const a = document.createElement('a');
+                                    a.href = url;
+                                    a.download = `clipflow_${job.id.slice(0, 8)}.${isVideo ? 'mp4' : 'png'}`;
+                                    a.click();
+                                  }}
+                                  className="rounded-md bg-white/10 backdrop-blur p-1 text-white hover:bg-white/20 transition-colors"
+                                >
+                                  <Download className="h-3 w-3" />
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(url);
+                                    setCopiedId(job.id);
+                                    setTimeout(() => setCopiedId(null), 2000);
+                                  }}
+                                  className="rounded-md bg-white/10 backdrop-blur p-1 text-white hover:bg-white/20 transition-colors"
+                                >
+                                  {isCopied ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
+                                </button>
+                              </div>
+                            </div>
+                            {/* Type badge */}
+                            <div className="absolute left-2 top-2">
+                              <span className="rounded-md bg-black/50 backdrop-blur px-1.5 py-0.5 text-[9px] text-white/80">
+                                {isVideo ? 'Video' : 'Image'}
+                              </span>
+                            </div>
+                          </motion.div>
+                        );
+                      })}
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+          /* Generate view */
           <div
             className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8"
               onDragOver={(e) => e.preventDefault()}
@@ -486,6 +611,7 @@ export default function StudioProjectPage() {
                 </div>
               </div>
             </div>
+          )}
 
             {/* Preview modal */}
             <Dialog open={!!selectedJob} onOpenChange={(o) => !o && setSelectedJob(null)}>
