@@ -35,8 +35,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Failed to create job: ' + jobError?.message }, { status: 500 });
     }
 
-    // ComfyUI builder maps flux/flux1/flux2 -> FLUX.2 text-to-image template.
-    const modelMap: Record<string, string> = { "flux": "flux2", "flux1": "flux2", "flux2": "flux2", "ideogram4": "ideogram4" };
+    // ComfyUI builder maps model names to workflow templates.
+    const modelMap: Record<string, string> = { "flux": "flux2", "flux1": "flux2", "flux2": "flux2", "ideogram4": "ideogram4", "krea2": "krea2" };
     const modalModel = modelMap[model] || "flux2";
 
     const modalPayload = {
