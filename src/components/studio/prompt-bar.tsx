@@ -11,11 +11,12 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { getModel, VOICES, type GenModel } from "./models";
+import { getModel, MODELS, VOICES, type GenModel } from "./models";
 
 interface PromptBarProps {
   isGenerating: boolean;
   selectedModel: string;
+  onModelChange?: (modelId: string) => void;
   onGenerate: (prompt: string, image: string | undefined, model: GenModel, options: { duration?: number; width?: number; height?: number; num_inference_steps?: number; seed?: number; audio?: string; voice_id?: string }) => void;
   onCancel: () => void;
   droppedImage?: string | null;
@@ -63,7 +64,7 @@ const SUGGESTIONS: Record<string, string[]> = {
 };
 
 export function PromptBar({
-  isGenerating, selectedModel, onGenerate, onCancel, droppedImage, onDroppedImageClear,
+  isGenerating, selectedModel, onModelChange, onGenerate, onCancel, droppedImage, onDroppedImageClear,
   droppedAudio, onDroppedAudioClear,
 }: PromptBarProps) {
   const [prompt, setPrompt] = useState("");
@@ -78,6 +79,7 @@ export function PromptBar({
   const [inspoVideo, setInspoVideo] = useState<string | null>(null);
   const [batchCount, setBatchCount] = useState(1);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [modelOpen, setModelOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [urlInput, setUrlInput] = useState("");
   const [uploadedAudio, setUploadedAudio] = useState<string | null>(null);
@@ -448,6 +450,57 @@ export function PromptBar({
         {/* Controls row */}
         <div className="mt-3 flex flex-wrap items-center justify-between gap-2 px-1">
           <div className="flex flex-1 flex-wrap items-center gap-2">
+            {/* Model selector */}
+            <Popover open={modelOpen} onOpenChange={setModelOpen}>
+              <PopoverTrigger asChild>
+                <button className="flex h-10 items-center gap-2 rounded-full border border-border/70 bg-secondary/60 px-3.5 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground sm:px-4">
+                  <Sparkles className="h-4 w-4 shrink-0 text-primary" />
+                  <span>{model.name}</span>
+                  <ChevronDown className="h-3.5 w-3.5 opacity-60" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent align="start" side="top" sideOffset={10} className="w-[min(22rem,calc(100vw-2rem))] p-3">
+                <p className="mb-2 px-1 text-[13px] font-medium text-muted-foreground">Select model</p>
+                <div className="space-y-1">
+                  {Object.entries(
+                    MODELS.reduce((acc, m) => {
+                      if (!acc[m.group]) acc[m.group] = [];
+                      acc[m.group].push(m);
+                      return acc;
+                    }, {} as Record<string, GenModel[]>)
+                  ).map(([group, models]) => (
+                    <div key={group}>
+                      <p className="mb-1 px-1 text-[11px] font-medium text-muted-foreground/60 uppercase tracking-wider">{group}</p>
+                      {models.map((m) => (
+                        <button
+                          key={m.id}
+                          onClick={() => {
+                            onModelChange?.(m.id);
+                            setModelOpen(false);
+                          }}
+                          className={cn(
+                            "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors",
+                            selectedModel === m.id
+                              ? "bg-primary/10 text-primary"
+                              : "hover:bg-secondary text-foreground"
+                          )}
+                        >
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="text-[13px] font-medium">{m.name}</span>
+                              <span className="text-[11px] text-muted-foreground">{m.credits} cr</span>
+                            </div>
+                            <p className="text-[11px] text-muted-foreground truncate">{m.desc}</p>
+                          </div>
+                          {selectedModel === m.id && <Check className="h-4 w-4 shrink-0 text-primary" />}
+                        </button>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
+
             {/* Settings popover */}
             <Popover open={settingsOpen} onOpenChange={setSettingsOpen}>
               <PopoverTrigger asChild>

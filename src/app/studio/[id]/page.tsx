@@ -892,6 +892,7 @@ export default function StudioProjectPage() {
                 <PromptBar
                   isGenerating={isGenerating}
                   selectedModel={selectedModel}
+                  onModelChange={setSelectedModel}
                   onGenerate={handleGenerate}
                   onCancel={handleCancel}
                   droppedImage={droppedImage}
