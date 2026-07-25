@@ -45,7 +45,7 @@ export const MODELS: GenModel[] = [
     credits: 1,
     needsImage: false,
     group: 'Image',
-    desc: 'Aesthetic-first image generation',
+    desc: 'Aesthetic-first image generation (coming soon)',
     placeholder: 'Describe the image you want to create…',
   },
 ];

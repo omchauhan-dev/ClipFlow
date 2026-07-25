@@ -1,17 +1,11 @@
 {
-  "98:6": {"inputs": {"text": "", "clip": ["11", 0]}, "class_type": "CLIPTextEncode"},
-  "98:47": {"inputs": {"width": 768, "height": 1024}, "class_type": "EmptyLatentImage"},
-  "98:48": {"inputs": {"width": 768, "height": 1024}, "class_type": "EmptyLatentImage"},
-  "98:104": {"inputs": {"value": false}, "class_type": "BooleanPrimitive"},
-  "98:100": {"inputs": {"value": 20}, "class_type": "IntPrimitive"},
-  "98:25": {"inputs": {"noise_seed": 42}, "class_type": "IntPrimitive"},
-  "9": {"inputs": {"filename_prefix": "flux2", "images": ["10", 0]}, "class_type": "SaveImage"},
-  "10": {"inputs": {"samples": ["5", 0], "vae": ["3", 0]}, "class_type": "VAEDecode"},
-  "5": {"inputs": {"model": ["4", 0], "positive": ["6", 0], "negative": ["7", 0], "latent_image": ["98:47", 0], "seed": ["98:25", 0], "steps": ["98:100", 0], "cfg": 1.0, "sampler": "euler", "scheduler": "simple", "denoise": 1.0}, "class_type": "KSampler"},
-  "6": {"inputs": {"conditioning": ["98:6", 0]}, "class_type": "ConditioningCombine"},
-  "7": {"inputs": {"conditioning": ["8", 0]}, "class_type": "ConditioningCombine"},
-  "8": {"inputs": {"text": "bad quality, blurry", "clip": ["11", 0]}, "class_type": "CLIPTextEncode"},
-  "4": {"inputs": {"ckpt_name": "flux2_dev_fp8mixed.safetensors"}, "class_type": "CheckpointLoaderSimple"},
+  "4": {"inputs": {"unet_name": "flux2_dev_fp8mixed.safetensors", "weight_dtype": "default"}, "class_type": "UNETLoader"},
+  "11": {"inputs": {"clip_name": "mistral_3_small_flux2_bf16.safetensors", "type": "ltxv"}, "class_type": "CLIPLoader"},
   "3": {"inputs": {"vae_name": "flux2-vae.safetensors"}, "class_type": "VAELoader"},
-  "11": {"inputs": {"clip_name": "mistral_3_small_flux2_bf16.safetensors", "type": "ltxv"}, "class_type": "CLIPLoader"}
+  "98:6": {"inputs": {"text": "", "clip": ["11", 0]}, "class_type": "CLIPTextEncode"},
+  "8": {"inputs": {"text": "bad quality, blurry", "clip": ["11", 0]}, "class_type": "CLIPTextEncode"},
+  "98:47": {"inputs": {"width": 768, "height": 1024, "batch_size": 1}, "class_type": "EmptyLatentImage"},
+  "5": {"inputs": {"model": ["4", 0], "positive": ["98:6", 0], "negative": ["8", 0], "latent_image": ["98:47", 0], "seed": 42, "steps": 20, "cfg": 1.0, "sampler_name": "euler", "scheduler": "simple", "denoise": 1.0}, "class_type": "KSampler"},
+  "10": {"inputs": {"samples": ["5", 0], "vae": ["3", 0]}, "class_type": "VAEDecode"},
+  "9": {"inputs": {"filename_prefix": "flux2", "images": ["10", 0]}, "class_type": "SaveImage"}
 }

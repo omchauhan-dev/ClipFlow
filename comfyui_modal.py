@@ -22,12 +22,53 @@ comfyui_image = (
     .pip_install("boto3", "requests", "fastapi[standard]", "huggingface-hub>=0.30.0",
                  "hf_transfer", "Pillow", "imageio[ffmpeg]", "mako", "regex")
     .env({"HF_HUB_ENABLE_HF_TRANSFER": "1", "HF_HOME": "/models_cache/hf",
-          "FORCE_REBUILD": "2026-06-15-2"})
-    # Bundle the workflow templates so the worker can build graphs from simple params
-    .add_local_dir(os.path.join(os.path.dirname(__file__), "comfyui_workflows"), "/workflows")
+          "FORCE_REBUILD": "2026-07-26-workflows-v4"})
 )
 
 WORKFLOWS_DIR = "/workflows"
+
+# Embedded workflow templates — used when add_local_dir mount is stale
+_EMBEDDED_WORKFLOWS = {
+    "flux2_t2i.json": {
+        "4": {"inputs": {"unet_name": "flux2_dev_fp8mixed.safetensors", "weight_dtype": "default"}, "class_type": "UNETLoader"},
+        "11": {"inputs": {"clip_name": "mistral_3_small_flux2_bf16.safetensors", "type": "ltxv"}, "class_type": "CLIPLoader"},
+        "3": {"inputs": {"vae_name": "flux2-vae.safetensors"}, "class_type": "VAELoader"},
+        "98:6": {"inputs": {"text": "", "clip": ["11", 0]}, "class_type": "CLIPTextEncode"},
+        "8": {"inputs": {"text": "bad quality, blurry", "clip": ["11", 0]}, "class_type": "CLIPTextEncode"},
+        "98:47": {"inputs": {"width": 768, "height": 1024, "batch_size": 1}, "class_type": "EmptyLatentImage"},
+        "5": {"inputs": {"model": ["4", 0], "positive": ["98:6", 0], "negative": ["8", 0], "latent_image": ["98:47", 0], "seed": 42, "steps": 20, "cfg": 1.0, "sampler_name": "euler", "scheduler": "simple", "denoise": 1.0}, "class_type": "KSampler"},
+        "10": {"inputs": {"samples": ["5", 0], "vae": ["3", 0]}, "class_type": "VAEDecode"},
+        "9": {"inputs": {"filename_prefix": "flux2", "images": ["10", 0]}, "class_type": "SaveImage"},
+    },
+    "ideogram4_t2i.json": {
+        "14": {"inputs": {"clip_name": "qwen3vl_8b_fp8_scaled.safetensors", "type": "ideogram4"}, "class_type": "CLIPLoader"},
+        "9": {"inputs": {"vae_name": "flux2-vae.safetensors"}, "class_type": "VAELoader"},
+        "23": {"inputs": {"unet_name": "ideogram4_fp8_scaled.safetensors", "weight_dtype": "default"}, "class_type": "UNETLoader"},
+        "154": {"inputs": {"unet_name": "ideogram4_unconditional_fp8_scaled.safetensors", "weight_dtype": "default"}, "class_type": "UNETLoader"},
+        "24": {"inputs": {"text": "", "clip": ["14", 0]}, "class_type": "CLIPTextEncode"},
+        "10": {"inputs": {"conditioning": ["24", 0]}, "class_type": "ConditioningZeroOut"},
+        "11": {"inputs": {"width": 1024, "height": 1024, "batch_size": 1}, "class_type": "EmptyFlux2LatentImage"},
+        "18": {"inputs": {"noise_seed": 42}, "class_type": "RandomNoise"},
+        "16": {"inputs": {"sampler_name": "euler"}, "class_type": "KSamplerSelect"},
+        "17": {"inputs": {"steps": 20, "width": 1024, "height": 1024, "mu": 0.0, "std": 1.75}, "class_type": "Ideogram4Scheduler"},
+        "156": {"inputs": {"model": ["23", 0], "conditioning": ["24", 0]}, "class_type": "BasicGuider"},
+        "157": {"inputs": {"model": ["154", 0], "conditioning": ["10", 0]}, "class_type": "BasicGuider"},
+        "12": {"inputs": {"noise": ["18", 0], "guider": ["156", 0], "sampler": ["16", 0], "sigmas": ["17", 0], "latent_image": ["11", 0]}, "class_type": "SamplerCustomAdvanced"},
+        "13": {"inputs": {"samples": ["12", 0], "vae": ["9", 0]}, "class_type": "VAEDecode"},
+        "158": {"inputs": {"filename_prefix": "ideogram4", "images": ["13", 0]}, "class_type": "SaveImage"},
+    },
+    "krea2_t2i.json": {
+        "4": {"inputs": {"unet_name": "krea2_turbo_fp8_scaled.safetensors", "weight_dtype": "default"}, "class_type": "UNETLoader"},
+        "200": {"inputs": {"clip_name": "qwen3vl_4b_fp8_scaled.safetensors", "type": "ltxv"}, "class_type": "CLIPLoader"},
+        "3": {"inputs": {"vae_name": "qwen_image_vae.safetensors"}, "class_type": "VAELoader"},
+        "98:1": {"inputs": {"text": "", "clip": ["200", 0]}, "class_type": "CLIPTextEncode"},
+        "8": {"inputs": {"text": "bad quality, blurry", "clip": ["200", 0]}, "class_type": "CLIPTextEncode"},
+        "98:2": {"inputs": {"width": 1024, "height": 1024, "batch_size": 1}, "class_type": "EmptyLatentImage"},
+        "5": {"inputs": {"model": ["4", 0], "positive": ["98:1", 0], "negative": ["8", 0], "latent_image": ["98:2", 0], "seed": 42, "steps": 8, "cfg": 1.0, "sampler_name": "er_sde", "scheduler": "simple", "denoise": 1.0}, "class_type": "KSampler"},
+        "10": {"inputs": {"samples": ["5", 0], "vae": ["3", 0]}, "class_type": "VAEDecode"},
+        "9": {"inputs": {"filename_prefix": "krea2", "images": ["10", 0]}, "class_type": "SaveImage"},
+    },
+}
 
 
 def _build_workflow(model: str, req: dict):
@@ -55,31 +96,39 @@ def _build_workflow(model: str, req: dict):
     fps = int(req.get("fps") or 25)
 
     def _load(name):
-        with open(os.path.join(WORKFLOWS_DIR, name), encoding="utf-8") as f:
-            return json.load(f)
+        import json as _json, os as _os
+        # Try file first, fall back to embedded templates
+        fpath = os.path.join(WORKFLOWS_DIR, name)
+        if _os.path.exists(fpath):
+            with open(fpath, encoding="utf-8") as f:
+                return _json.load(f)
+        # Embedded fallback (used when add_local_dir is not mounted)
+        return _EMBEDDED_WORKFLOWS[name]
 
     # ── Ideogram 4 text-to-image ──
     if model in IDEOGRAM_MODELS:
         width = int(req.get("width") or 1024)
         height = int(req.get("height") or 1024)
+        steps = int(req.get("steps") or 20)
         wf = _load("ideogram4_t2i.json")
-        wf["98:24"]["inputs"]["text"] = prompt
-        wf["98:27"]["inputs"]["value"] = width
-        wf["98:28"]["inputs"]["value"] = height
-        wf["98:18"]["inputs"]["noise_seed"] = seed
-        if req.get("steps"):
-            wf["98:17"]["inputs"]["steps"] = int(req["steps"])
-            steps = int(req["steps"])
-            if steps >= 48:
-                wf["98:17"]["inputs"]["mu"] = 0.0
-                wf["98:17"]["inputs"]["std"] = 1.5
-            elif steps <= 12:
-                wf["98:17"]["inputs"]["mu"] = 0.5
-                wf["98:17"]["inputs"]["std"] = 1.75
-            else:
-                wf["98:17"]["inputs"]["mu"] = 0.0
-                wf["98:17"]["inputs"]["std"] = 1.75
-        wf["9"]["inputs"]["filename_prefix"] = req.get("filename_prefix", "ideogram4")
+        wf["24"]["inputs"]["text"] = prompt
+        wf["11"]["inputs"]["width"] = width
+        wf["11"]["inputs"]["height"] = height
+        wf["17"]["inputs"]["width"] = width
+        wf["17"]["inputs"]["height"] = height
+        wf["17"]["inputs"]["steps"] = steps
+        wf["18"]["inputs"]["noise_seed"] = seed
+        # Preset-based mu/std: Quality=0.0/1.5 (48 steps), Default=0.0/1.75 (20 steps), Turbo=0.5/1.75 (12 steps)
+        if steps >= 48:
+            wf["17"]["inputs"]["mu"] = 0.0
+            wf["17"]["inputs"]["std"] = 1.5
+        elif steps <= 12:
+            wf["17"]["inputs"]["mu"] = 0.5
+            wf["17"]["inputs"]["std"] = 1.75
+        else:
+            wf["17"]["inputs"]["mu"] = 0.0
+            wf["17"]["inputs"]["std"] = 1.75
+        wf["158"]["inputs"]["filename_prefix"] = req.get("filename_prefix", "ideogram4")
         return wf, "png"
 
     # ── FLUX.2 text-to-image ──
@@ -90,12 +139,9 @@ def _build_workflow(model: str, req: dict):
         wf["98:6"]["inputs"]["text"] = prompt
         wf["98:47"]["inputs"]["width"] = width
         wf["98:47"]["inputs"]["height"] = height
-        wf["98:48"]["inputs"]["width"] = width
-        wf["98:48"]["inputs"]["height"] = height
-        wf["98:104"]["inputs"]["value"] = bool(req.get("turbo", False))
         if req.get("steps"):
-            wf["98:100"]["inputs"]["value"] = int(req["steps"])
-        wf["98:25"]["inputs"]["noise_seed"] = seed
+            wf["5"]["inputs"]["steps"] = int(req["steps"])
+        wf["5"]["inputs"]["seed"] = seed
         wf["9"]["inputs"]["filename_prefix"] = req.get("filename_prefix", "flux2")
         return wf, "png"
 
@@ -105,17 +151,14 @@ def _build_workflow(model: str, req: dict):
         height = int(req.get("height") or 1024)
         steps = int(req.get("steps") or 8)
         wf = _load("krea2_t2i.json")
-        wf["100:1"]["inputs"]["text"] = prompt
-        wf["100:2"]["inputs"]["width"] = width
-        wf["100:2"]["inputs"]["height"] = height
-        wf["100:3"]["inputs"]["noise_seed"] = seed
-        wf["100:4"]["inputs"]["steps"] = steps
+        wf["98:1"]["inputs"]["text"] = prompt
+        wf["98:2"]["inputs"]["width"] = width
+        wf["98:2"]["inputs"]["height"] = height
+        wf["5"]["inputs"]["steps"] = steps
+        wf["5"]["inputs"]["seed"] = seed
         if req.get("cfg") is not None:
-            wf["100:5"]["inputs"]["cfg"] = float(req["cfg"])
-        if req.get("lora"):
-            wf["100:6"]["inputs"]["lora_name"] = req["lora"]
-            wf["100:6"]["inputs"]["strength"] = float(req.get("lora_strength", 0.8))
-        wf["100:10"]["inputs"]["filename_prefix"] = req.get("filename_prefix", "krea2")
+            wf["5"]["inputs"]["cfg"] = float(req["cfg"])
+        wf["9"]["inputs"]["filename_prefix"] = req.get("filename_prefix", "krea2")
         return wf, "png"
 
     # ── LTX-2.3 ID-LoRA lip-sync (close-up, audio-driven) ──
@@ -464,13 +507,22 @@ class ComfyUIWorker:
                 keys = sorted(obj.keys())
                 ideogram_keys = [k for k in keys if "ideogram" in k.lower() or "Ideogram" in k]
 
-                # Return full IdeogramV4 info to see its structure
-                iv4 = obj.get("IdeogramV4", {})
-                return {
-                    "total_nodes": len(keys),
-                    "ideogram_nodes": ideogram_keys,
-                    "IdeogramV4_info": iv4,
-                }
+                filter_name = request.get("filter")
+                if filter_name == "list":
+                    return {"total": len(keys), "nodes": keys}
+                if filter_name and filter_name in obj:
+                    return {filter_name: obj[filter_name]}
+
+                # Return useful node subset
+                useful = ["UNETLoader", "KSampler", "KSamplerAdvanced", "CLIPTextEncode",
+                          "EmptyLatentImage", "VAEDecode", "SaveImage", "CheckpointLoaderSimple",
+                          "unCLIPCheckpointLoader", "DiffusionLoader"]
+                result = {}
+                for n in useful:
+                    if n in obj:
+                        result[n] = {"required": obj[n].get("input", {}).get("required", {}),
+                                     "optional": obj[n].get("input", {}).get("optional", {})}
+                return result
             except Exception as e:
                 return {"error": str(e)}
 
