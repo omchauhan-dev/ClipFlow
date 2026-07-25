@@ -462,39 +462,30 @@ export function PromptBar({
               <PopoverContent align="start" side="top" sideOffset={10} className="w-[min(22rem,calc(100vw-2rem))] p-3">
                 <p className="mb-2 px-1 text-[13px] font-medium text-muted-foreground">Select model</p>
                 <div className="space-y-1">
-                  {['Image', 'Video', 'Avatar', 'Audio'].map((group) => {
-                    const groupModels = MODELS.filter(m => m.group === group);
-                    if (groupModels.length === 0) return null;
-                    return (
-                      <div key={group}>
-                        <p className="mb-1 px-1 text-[11px] font-medium text-muted-foreground/60 uppercase tracking-wider">{group}</p>
-                        {groupModels.map((m) => (
-                          <button
-                            key={m.id}
-                            onClick={() => {
-                              onModelChange?.(m.id);
-                              setModelOpen(false);
-                            }}
-                            className={cn(
-                              "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors",
-                              selectedModel === m.id
-                                ? "bg-primary/10 text-primary"
-                                : "hover:bg-secondary text-foreground"
-                            )}
-                          >
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2">
-                                <span className="text-[13px] font-medium">{m.name}</span>
-                                <span className="text-[11px] text-muted-foreground">{m.credits} cr</span>
-                              </div>
-                              <p className="text-[11px] text-muted-foreground truncate">{m.desc}</p>
-                            </div>
-                            {selectedModel === m.id && <Check className="h-4 w-4 shrink-0 text-primary" />}
-                          </button>
-                        ))}
+                  {MODELS.map((m) => (
+                    <button
+                      key={m.id}
+                      onClick={() => {
+                        onModelChange?.(m.id);
+                        setModelOpen(false);
+                      }}
+                      className={cn(
+                        "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors",
+                        selectedModel === m.id
+                          ? "bg-primary/10 text-primary"
+                          : "hover:bg-secondary text-foreground"
+                      )}
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[13px] font-medium">{m.name}</span>
+                          <span className="text-[11px] text-muted-foreground">{m.credits} cr</span>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground truncate">{m.desc}</p>
                       </div>
-                    );
-                  })}
+                      {selectedModel === m.id && <Check className="h-4 w-4 shrink-0 text-primary" />}
+                    </button>
+                  ))}
                 </div>
               </PopoverContent>
             </Popover>
