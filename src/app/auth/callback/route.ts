@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
     const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
     const { createServerClient } = await import('@supabase/ssr');
 
-    const res = NextResponse.redirect(new URL(next, origin));
+    const res = NextResponse.redirect(new URL('/projects', origin));
 
     const supabase = createServerClient(supabaseUrl, supabaseKey, {
       cookies: {
