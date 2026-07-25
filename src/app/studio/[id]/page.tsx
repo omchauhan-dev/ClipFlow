@@ -15,7 +15,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, Sparkles, Image as ImageIcon, Coins,
   FileVideo, Download, X, Trash2, Play, Mic, ExternalLink,
-  Grid3X3, Wand2, Copy, Check,
+  Grid3X3, Wand2, Copy, Check, Upload,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -56,6 +56,8 @@ export default function StudioProjectPage() {
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [activeTab, setActiveTab] = useState<'generate' | 'library'>('generate');
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [uploadedImages, setUploadedImages] = useState<{ id: string; url: string; name: string; created_at: string }[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
 
 
   const activeModel = getModel(selectedModel);
@@ -83,6 +85,53 @@ export default function StudioProjectPage() {
       .limit(50);
     if (data) setJobs(data);
   }, [id]);
+
+  const fetchUploadedImages = useCallback(async () => {
+    const { data } = await supabase
+      .from('library_images')
+      .select('*')
+      .eq('project_id', id)
+      .order('created_at', { ascending: false });
+    if (data) setUploadedImages(data);
+  }, [id]);
+
+  const handleUploadImage = async (file: File) => {
+    setIsUploading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${id}/${Date.now()}.${fileExt}`;
+      const { error: uploadError } = await supabase.storage
+        .from('library-uploads')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from('library-uploads')
+        .getPublicUrl(fileName);
+
+      await supabase.from('library_images').insert({
+        project_id: id,
+        user_id: session.user.id,
+        url: urlData.publicUrl,
+        name: file.name,
+      });
+
+      fetchUploadedImages();
+    } catch (error) {
+      console.error('Upload failed:', error);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleDeleteUploadedImage = async (imageId: string) => {
+    await supabase.from('library_images').delete().eq('id', imageId);
+    setUploadedImages((prev) => prev.filter((img) => img.id !== imageId));
+  };
 
   const startPolling = useCallback(async () => {
     let sawProcessing = false;
@@ -122,9 +171,10 @@ export default function StudioProjectPage() {
     fetchProject();
     fetchJobs();
     fetchCredits();
+    fetchUploadedImages();
     const interval = setInterval(fetchJobs, 5000);
     return () => clearInterval(interval);
-  }, [fetchProject, fetchJobs, fetchCredits]);
+  }, [fetchProject, fetchJobs, fetchCredits, fetchUploadedImages]);
 
   useEffect(() => {
     if (!isGenerating) {
@@ -334,16 +384,123 @@ export default function StudioProjectPage() {
             /* Library view */
             <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
               <div className="mx-auto w-full max-w-6xl">
-                {jobs.filter(j => j.status === 'completed' && getJobUrl(j)).length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-20 text-center">
+                {/* Upload button */}
+                <div className="mb-4 flex items-center justify-between">
+                  <p className="text-xs text-muted-foreground">
+                    {jobs.filter(j => j.status === 'completed' && getJobUrl(j)).length + uploadedImages.length} items
+                  </p>
+                  <label
+                    className={cn(
+                      "flex items-center gap-1.5 rounded-lg border border-border/40 bg-card/50 px-3 py-1.5 text-xs font-medium cursor-pointer transition-colors hover:bg-card/80",
+                      isUploading && "opacity-50 pointer-events-none"
+                    )}
+                  >
+                    <Upload className="h-3 w-3" />
+                    {isUploading ? 'Uploading...' : 'Upload Image'}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      disabled={isUploading}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleUploadImage(file);
+                        e.target.value = '';
+                      }}
+                    />
+                  </label>
+                </div>
+
+                {/* Empty state */}
+                {jobs.filter(j => j.status === 'completed' && getJobUrl(j)).length === 0 && uploadedImages.length === 0 ? (
+                  <div
+                    className="flex flex-col items-center justify-center py-20 text-center border-2 border-dashed border-border/40 rounded-2xl"
+                    onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      const file = e.dataTransfer.files?.[0];
+                      if (file && file.type.startsWith('image/')) handleUploadImage(file);
+                    }}
+                  >
                     <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-secondary/20 mb-4">
-                      <Grid3X3 className="h-7 w-7 text-muted-foreground" />
+                      <Upload className="h-7 w-7 text-muted-foreground" />
                     </div>
-                    <p className="text-sm font-medium text-muted-foreground">No generated content yet</p>
-                    <p className="text-xs text-muted-foreground/60 mt-1">Switch to Generate to create your first image</p>
+                    <p className="text-sm font-medium text-muted-foreground">No images yet</p>
+                    <p className="text-xs text-muted-foreground/60 mt-1">Upload images or generate content to get started</p>
+                    <label className="mt-4 flex items-center gap-1.5 rounded-lg bg-primary/10 px-4 py-2 text-xs font-medium text-primary cursor-pointer hover:bg-primary/20 transition-colors">
+                      <Upload className="h-3.5 w-3.5" />
+                      Upload your first image
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleUploadImage(file);
+                          e.target.value = '';
+                        }}
+                      />
+                    </label>
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                    {/* Uploaded images */}
+                    {uploadedImages.map((img) => (
+                      <motion.div
+                        key={img.id}
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="group relative overflow-hidden rounded-xl border border-border/40 bg-card/30 shadow-lg hover:border-border hover:shadow-xl transition-all"
+                      >
+                        <div className="aspect-square overflow-hidden bg-black/20">
+                          <img src={img.url} alt={img.name} className="h-full w-full object-cover" />
+                        </div>
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-2.5">
+                          <p className="truncate text-[10px] text-white/80 mb-2 leading-tight">{img.name}</p>
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => window.open(img.url, '_blank')}
+                              className="flex-1 rounded-md bg-white/10 backdrop-blur px-2 py-1 text-[10px] text-white hover:bg-white/20 transition-colors"
+                            >
+                              View
+                            </button>
+                            <button
+                              onClick={() => {
+                                const a = document.createElement('a');
+                                a.href = img.url;
+                                a.download = img.name;
+                                a.click();
+                              }}
+                              className="rounded-md bg-white/10 backdrop-blur p-1 text-white hover:bg-white/20 transition-colors"
+                            >
+                              <Download className="h-3 w-3" />
+                            </button>
+                            <button
+                              onClick={() => {
+                                navigator.clipboard.writeText(img.url);
+                                setCopiedId(img.id);
+                                setTimeout(() => setCopiedId(null), 2000);
+                              }}
+                              className="rounded-md bg-white/10 backdrop-blur p-1 text-white hover:bg-white/20 transition-colors"
+                            >
+                              {copiedId === img.id ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
+                            </button>
+                          </div>
+                        </div>
+                        <div className="absolute left-2 top-2">
+                          <span className="rounded-md bg-black/50 backdrop-blur px-1.5 py-0.5 text-[9px] text-white/80">Upload</span>
+                        </div>
+                        <button
+                          onClick={() => handleDeleteUploadedImage(img.id)}
+                          className="absolute right-2 top-2 rounded-md bg-black/50 backdrop-blur p-1 text-white/60 opacity-0 group-hover:opacity-100 hover:text-red-400 transition-all"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </button>
+                      </motion.div>
+                    ))}
+
+                    {/* Generated jobs */}
                     {jobs
                       .filter(j => j.status === 'completed' && getJobUrl(j))
                       .map((job) => {
@@ -371,7 +528,6 @@ export default function StudioProjectPage() {
                                 <img src={url} alt="" className="h-full w-full object-cover" />
                               )}
                             </div>
-                            {/* Hover overlay */}
                             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-2.5">
                               <p className="truncate text-[10px] text-white/80 mb-2 leading-tight">{job.prompt}</p>
                               <div className="flex items-center gap-1">
@@ -404,7 +560,6 @@ export default function StudioProjectPage() {
                                 </button>
                               </div>
                             </div>
-                            {/* Type badge */}
                             <div className="absolute left-2 top-2">
                               <span className="rounded-md bg-black/50 backdrop-blur px-1.5 py-0.5 text-[9px] text-white/80">
                                 {isVideo ? 'Video' : 'Image'}
@@ -413,6 +568,26 @@ export default function StudioProjectPage() {
                           </motion.div>
                         );
                       })}
+
+                    {/* Upload card */}
+                    <label className="group relative flex aspect-square cursor-pointer flex-col items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-border/40 bg-card/10 transition-all hover:border-primary/40 hover:bg-primary/[0.02]">
+                      <div className="flex flex-col items-center gap-2">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary/20 group-hover:bg-primary/10 transition-colors">
+                          <Upload className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                        </div>
+                        <span className="text-[11px] text-muted-foreground group-hover:text-foreground transition-colors">Add image</span>
+                      </div>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleUploadImage(file);
+                          e.target.value = '';
+                        }}
+                      />
+                    </label>
                   </div>
                 )}
               </div>
@@ -669,7 +844,7 @@ export default function StudioProjectPage() {
             </Dialog>
 
             {/* Bottom prompt bar */}
-            <div className="relative z-20 shrink-0 border-t border-border/30 bg-background/60 backdrop-blur-xl p-4 sm:p-5 lg:p-6">
+            <div className="relative z-20 shrink-0 border-t border-border/30 bg-background/60 backdrop-blur-xl p-4 sm:p-5 lg:p-6 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] sm:pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))] lg:pb-6">
               <div className="mx-auto max-w-4xl">
                 <PromptBar
                   isGenerating={isGenerating}
