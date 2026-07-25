@@ -586,7 +586,7 @@ export default function StudioProjectPage() {
                                   }}
                                   className="rounded-md bg-white/10 backdrop-blur p-1 text-white hover:bg-white/20 transition-colors"
                                 >
-                                  {isCopied === job.id ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
+                                  {isCopied ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
                                 </button>
                                 {!isVideo && (
                                   <button

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import {
   Wand2, X, Loader2, SlidersHorizontal, Sparkles, Plus, Dices, ChevronDown, ScanSearch,
-  Upload, Link as LinkIcon, Mic, Music, ArrowLeft,
+  Upload, Link as LinkIcon, Mic, Music, ArrowLeft, Check,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Textarea } from "@/components/ui/textarea";
