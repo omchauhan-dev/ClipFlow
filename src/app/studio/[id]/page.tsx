@@ -887,7 +887,7 @@ export default function StudioProjectPage() {
             </Dialog>
 
             {/* Bottom prompt bar */}
-            <div className="relative z-20 shrink-0 border-t border-border/30 bg-background/60 backdrop-blur-xl p-4 sm:p-5 lg:p-6 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] sm:pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))] lg:pb-6">
+            <div className="relative z-20 shrink-0 border-t border-border/30 bg-background/60 backdrop-blur-xl p-4 sm:p-5 lg:p-6 pb-8 sm:pb-6 lg:pb-6">
               <div className="mx-auto max-w-4xl">
                 <PromptBar
                   isGenerating={isGenerating}
