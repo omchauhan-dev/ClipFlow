@@ -52,25 +52,29 @@ export async function POST(req: NextRequest) {
       job_id: job.id,
     };
 
-    // Worker calls back via callback_url when done (survives serverless).
-    fetch(COMFYUI_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(modalPayload),
-    }).then(async (res) => {
-      if (res.ok) {
-        const result = await res.json();
-        const url = result.r2_url || result.output || null;
-        await supabase.from('jobs').update({ status: 'completed', image_url: url, r2_url: url }).eq('id', job.id);
-        await sendTelegramNotification(`🖼 <b>Image Generated</b>\nModel: ${model}\nPrompt: ${cleanPrompt.slice(0, 80)}`);
-      } else {
-        await supabase.from('jobs').update({ status: 'failed' }).eq('id', job.id);
-      }
-    }).catch(async () => {
+    // Fire request to Modal worker — await it so the serverless function
+    // stays alive long enough for Vercel to deliver the HTTP request.
+    let result: any = null;
+    try {
+      const res = await fetch(COMFYUI_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(modalPayload),
+      });
+      result = await res.json();
+    } catch (e) {
       await supabase.from('jobs').update({ status: 'failed' }).eq('id', job.id);
-    });
+      return NextResponse.json({ job_id: job.id, status: 'failed', error: 'Modal worker unreachable' });
+    }
 
-    return NextResponse.json({ job_id: job.id, status: 'processing' });
+    if (result?.r2_url) {
+      await supabase.from('jobs').update({ status: 'completed', image_url: result.r2_url, r2_url: result.r2_url }).eq('id', job.id);
+      await sendTelegramNotification(`🖼 <b>Image Generated</b>\nModel: ${model}\nPrompt: ${cleanPrompt.slice(0, 80)}`);
+    } else {
+      await supabase.from('jobs').update({ status: 'failed', error: result?.error || 'Generation failed' }).eq('id', job.id);
+    }
+
+    return NextResponse.json({ job_id: job.id, status: result?.r2_url ? 'completed' : 'failed', r2_url: result?.r2_url || null });
   } catch (err: any) {
     return NextResponse.json({ error: err?.message || 'Unknown error' }, { status: 500 });
   }
