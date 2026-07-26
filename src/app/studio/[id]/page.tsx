@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
@@ -58,6 +58,7 @@ export default function StudioProjectPage() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [uploadedImages, setUploadedImages] = useState<{ id: string; url: string; name: string; created_at: string }[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const pendingRef = useRef<Set<string>>(new Set());
 
 
   const activeModel = getModel(selectedModel);
@@ -163,26 +164,21 @@ export default function StudioProjectPage() {
     }
   };
 
-  const startPolling = useCallback(async () => {
-    let sawProcessing = false;
+  const startPolling = useCallback(async (jobIds?: string[]) => {
+    if (jobIds?.length) jobIds.forEach(j => pendingRef.current.add(j));
     for (let i = 0; i < 200; i++) {
       await new Promise((r) => setTimeout(r, 1000));
-      const { data } = await supabase
-        .from('jobs')
-        .select('id, status')
-        .eq('project_id', id)
-        .eq('status', 'processing');
-      const count = data?.length ?? 0;
       await fetchJobs();
-      if (count > 0) {
-        sawProcessing = true;
-      } else if (sawProcessing || i >= 5) {
-        setIsGenerating(false);
-        return;
+      if (pendingRef.current.size === 0) { setIsGenerating(false); return; }
+      // Check if pending jobs are still processing
+      for (const jid of pendingRef.current) {
+        const { data } = await supabase.from('jobs').select('status').eq('id', jid).single();
+        if (!data || data.status !== 'processing') pendingRef.current.delete(jid);
       }
+      if (pendingRef.current.size === 0) { setIsGenerating(false); return; }
     }
     setIsGenerating(false);
-  }, [id, fetchJobs]);
+  }, [fetchJobs]);
 
   const handleCancel = async () => {
     setIsGenerating(false);
@@ -202,9 +198,26 @@ export default function StudioProjectPage() {
     fetchJobs();
     fetchCredits();
     fetchUploadedImages();
-    const interval = setInterval(fetchJobs, 2000);
-    return () => clearInterval(interval);
-  }, [fetchProject, fetchJobs, fetchCredits, fetchUploadedImages]);
+
+    const channel = supabase
+      .channel(`jobs:${id}`)
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'jobs', filter: `project_id=eq.${id}` },
+        () => {
+          fetchJobs();
+          // Check if any tracked pending jobs are done
+          for (const jid of pendingRef.current) {
+            supabase.from('jobs').select('status').eq('id', jid).single().then(({ data }) => {
+              if (!data || data.status !== 'processing') pendingRef.current.delete(jid);
+              if (pendingRef.current.size === 0) setIsGenerating(false);
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [fetchProject, fetchJobs, fetchCredits, fetchUploadedImages, id]);
 
   useEffect(() => {
     if (!isGenerating) {
@@ -218,11 +231,11 @@ export default function StudioProjectPage() {
   useEffect(() => {
     if (isGenerating) return;
     const tenMinAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
-    const processingJob = jobs.find((j) => j.status === 'processing' && j.created_at > tenMinAgo);
-    if (processingJob) {
+    const processingJobs = jobs.filter((j) => j.status === 'processing' && j.created_at > tenMinAgo);
+    if (processingJobs.length > 0) {
       setIsGenerating(true);
       setGenerationStart(Date.now());
-      startPolling();
+      startPolling(processingJobs.map(j => j.id));
     }
   }, [jobs, isGenerating, startPolling]);
 
@@ -280,7 +293,7 @@ export default function StudioProjectPage() {
     const endpoint = endpointFor(model.kind);
 
     if (model.kind === 'avatar') {
-      fetch(endpoint, {
+      const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -292,7 +305,8 @@ export default function StudioProjectPage() {
           resolution: '480p',
         }),
       });
-      startPolling();
+      const { job_id } = await res.json().catch(() => ({}));
+      startPolling(job_id ? [job_id] : undefined);
       return;
     }
 
@@ -312,7 +326,7 @@ export default function StudioProjectPage() {
       return;
     }
 
-    fetch(endpoint, {
+    const res = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -327,8 +341,8 @@ export default function StudioProjectPage() {
         seed: options.seed || Math.floor(Math.random() * 10000),
       }),
     });
-
-    startPolling();
+    const { job_id } = await res.json().catch(() => ({}));
+    startPolling(job_id ? [job_id] : undefined);
   }
 
   function getJobUrl(job: Job) {
