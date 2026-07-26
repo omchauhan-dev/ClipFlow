@@ -347,6 +347,20 @@ export default function LibraryPage() {
                   )}
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
+                  {selectedImage.user_id === userId && (
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => {
+                        handleDelete(selectedImage.id);
+                        setSelectedImage(null);
+                      }}
+                      className="h-8 gap-1.5 rounded-lg text-xs"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      Delete
+                    </Button>
+                  )}
                   <Button
                     variant="outline"
                     size="sm"

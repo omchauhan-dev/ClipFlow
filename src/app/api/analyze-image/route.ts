@@ -2,13 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export const maxDuration = 30;
 
-/**
- * Inspiration image/video -> generation prompt.
- * Accepts a single image, OR multiple frames sampled from a video, analyzes
- * them with a vision model, and returns a ready-to-use generation prompt.
- *
- * Body: { image?: string, images?: string[], type?: 'image' | 'video', source?: 'image' | 'video' }
- */
+async function toDataUrl(url: string): Promise<string> {
+  if (url.startsWith('data:')) return url;
+  const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
+  if (!res.ok) throw new Error(`Failed to fetch image: ${res.status}`);
+  const buf = Buffer.from(await res.arrayBuffer());
+  const mime = res.headers.get('content-type') || 'image/jpeg';
+  return `data:${mime};base64,${buf.toString('base64')}`;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { image, images, type, source } = await req.json();
@@ -20,6 +22,8 @@ export async function POST(req: NextRequest) {
 
     const isVideo = type === 'video';
     const fromVideo = source === 'video' || frames.length > 1;
+
+    const dataUrls = await Promise.all(frames.slice(0, 4).map(toDataUrl));
 
     const system = `You are a prompt writer for AI ${isVideo ? 'video' : 'image'} generation. ${
       fromVideo
@@ -35,7 +39,7 @@ Return ONLY the prompt text.`;
 
     const userContent: Array<Record<string, unknown>> = [
       { type: 'text', text: `Write a ${isVideo ? 'video' : 'image'} generation prompt that recreates ${fromVideo ? 'this video' : 'this'}.` },
-      ...frames.slice(0, 4).map((url) => ({ type: 'image_url', image_url: { url } })),
+      ...dataUrls.map((url) => ({ type: 'image_url', image_url: { url } })),
     ];
 
     const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -45,7 +49,7 @@ Return ONLY the prompt text.`;
         Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
       },
       body: JSON.stringify({
-        model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+        model: 'qwen/qwen3.6-27b',
         messages: [
           { role: 'system', content: system },
           { role: 'user', content: userContent },
