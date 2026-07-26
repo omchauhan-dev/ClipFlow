@@ -847,14 +847,14 @@ export default function StudioProjectPage() {
 
             {/* Preview modal */}
             <Dialog open={!!selectedJob} onOpenChange={(o) => !o && setSelectedJob(null)}>
-              <DialogContent className="max-w-5xl border-border/30 bg-black/95 backdrop-blur-xl p-0 shadow-2xl [&>button]:!top-3 [&>button]:!right-3 [&>button]:!bg-black/60 [&>button]:!text-white [&>button]:!rounded-full [&>button]:!h-8 [&>button]:!w-8">
+              <DialogContent className="max-w-5xl border-border/30 bg-background/95 backdrop-blur-xl p-0 shadow-2xl [&>button]:!top-3 [&>button]:!right-3 [&>button]:!bg-background/80 [&>button]:!text-foreground [&>button]:!rounded-full [&>button]:!h-8 [&>button]:!w-8">
                 {selectedJob && (
                   <div className="flex flex-col">
-                    <div className="flex items-center justify-center p-2">
+                    <div className="flex items-center justify-center bg-black">
                       {getJobUrl(selectedJob).endsWith('.mp4') || selectedJob.job_type === 'video' ? (
-                        <video src={getJobUrl(selectedJob)} controls autoPlay className="max-h-[85vh] w-auto max-w-full rounded-lg object-contain" />
+                        <video src={getJobUrl(selectedJob)} controls autoPlay className="max-h-[80vh] w-full object-contain" />
                       ) : (
-                        <img src={getJobUrl(selectedJob)} alt="" className="max-h-[85vh] w-auto max-w-full rounded-lg object-contain" />
+                        <img src={getJobUrl(selectedJob)} alt="" className="max-h-[80vh] w-full object-contain" />
                       )}
                     </div>
                     <div className="flex items-center justify-between gap-3 bg-background/95 px-5 py-3">
