@@ -331,7 +331,7 @@ export function PromptBar({
 
       {/* Composer */}
       <div
-        className="rounded-[1.75rem] border border-border bg-card/70 px-3 py-3 shadow-xl shadow-black/30 backdrop-blur-md transition-colors focus-within:border-primary/40"
+        className="rounded-[1.75rem] border border-border bg-card/70 px-5 py-4 shadow-xl shadow-black/30 backdrop-blur-md transition-colors focus-within:border-primary/40"
         onDragOver={(e) => e.preventDefault()}
         onDrop={(e) => {
           e.preventDefault();
@@ -395,27 +395,15 @@ export function PromptBar({
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             placeholder={model.placeholder}
-            className="max-h-[160px] min-h-[44px] flex-1 resize-none border-0 bg-transparent p-0 pt-1.5 text-[15px] leading-relaxed placeholder:text-muted-foreground/60 focus-visible:ring-0 focus-visible:ring-offset-0"
+            className="max-h-[240px] min-h-[44px] flex-1 resize-none border-0 bg-transparent p-0 pt-1.5 text-[15px] leading-relaxed placeholder:text-muted-foreground/60 focus-visible:ring-0 focus-visible:ring-offset-0"
             onKeyDown={(e) => {
               if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
                 e.preventDefault();
                 handleSubmit();
               }
             }}
-            rows={1}
+            rows={2}
           />
-
-          {prompt.trim() && (
-            <button
-              onClick={handleEnhance}
-              disabled={isEnhancing}
-              title="Enhance prompt"
-              className="mt-0.5 flex h-9 items-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 px-3 text-[13px] font-medium text-primary transition-colors hover:bg-primary/20 disabled:opacity-50"
-            >
-              <Sparkles className={cn("h-4 w-4", isEnhancing && "animate-spin")} />
-              <span className="hidden sm:inline">{isEnhancing ? 'Enhancing…' : 'Enhance'}</span>
-            </button>
-          )}
         </div>
 
         {/* Controls row */}
@@ -609,6 +597,19 @@ export function PromptBar({
                 +
               </button>
             </div>
+
+            {/* Enhance button in controls row */}
+            {prompt.trim() && (
+              <button
+                onClick={handleEnhance}
+                disabled={isEnhancing}
+                title="Enhance prompt"
+                className="hidden sm:flex h-10 items-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 px-3.5 text-[13px] font-medium text-primary transition-colors hover:bg-primary/20 disabled:opacity-50"
+              >
+                <Sparkles className={cn("h-4 w-4", isEnhancing && "animate-spin")} />
+                <span>{isEnhancing ? 'Enhancing…' : 'Enhance'}</span>
+              </button>
+            )}
           </div>
 
           {/* Generate / Stop */}
