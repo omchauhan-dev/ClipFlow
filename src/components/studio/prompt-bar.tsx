@@ -257,13 +257,16 @@ export function PromptBar({
     if (!url) return;
     const isVideoUrl = /\.(mp4|webm|mov|m4v)(\?|$)/i.test(url);
     const isAudioUrl = /\.(mp3|wav|ogg|m4a|aac|flac)(\?|$)/i.test(url);
+    const isImageUrl = /\.(jpg|jpeg|png|gif|webp|bmp|svg|avif)(\?|$)/i.test(url);
     if (isVideoUrl) {
       setInspoVideo(url);
     } else if (isAudioUrl) {
       setUploadedAudio(url);
-    } else {
+    } else if (isImageUrl) {
       setUploadedImage(url);
       setUploadedImages(prev => [...prev, url]);
+    } else {
+      alert('Please paste a direct image URL (ending in .jpg, .png, .gif, .webp, etc.) — page links like Pinterest won\'t work.');
     }
     setUrlInput("");
     setAddOpen(false);

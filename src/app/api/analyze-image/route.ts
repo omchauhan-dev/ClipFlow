@@ -6,9 +6,10 @@ async function toDataUrl(url: string): Promise<string> {
   if (url.startsWith('data:')) return url;
   const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
   if (!res.ok) throw new Error(`Failed to fetch image: ${res.status}`);
+  const ct = res.headers.get('content-type') || '';
+  if (!ct.startsWith('image/')) throw new Error(`URL is not an image (${ct || 'unknown type'}). Paste a direct image URL ending in .jpg, .png, etc.`);
   const buf = Buffer.from(await res.arrayBuffer());
-  const mime = res.headers.get('content-type') || 'image/jpeg';
-  return `data:${mime};base64,${buf.toString('base64')}`;
+  return `data:${ct};base64,${buf.toString('base64')}`;
 }
 
 export async function POST(req: NextRequest) {
