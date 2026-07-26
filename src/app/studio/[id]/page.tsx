@@ -423,7 +423,7 @@ export default function StudioProjectPage() {
         </header>
 
         {/* Canvas / Library */}
-        <div className="flex flex-1 flex-col bg-gradient-to-b from-background via-background to-black/40">
+        <div className="flex flex-1 flex-col overflow-hidden bg-gradient-to-b from-background via-background to-black/40">
           {activeTab === 'library' ? (
             /* Library view */
             <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
