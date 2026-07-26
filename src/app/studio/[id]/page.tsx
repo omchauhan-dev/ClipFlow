@@ -166,17 +166,17 @@ export default function StudioProjectPage() {
   const startPolling = useCallback(async () => {
     let sawProcessing = false;
     for (let i = 0; i < 200; i++) {
-      await new Promise((r) => setTimeout(r, 3000));
+      await new Promise((r) => setTimeout(r, 1000));
       const { data } = await supabase
         .from('jobs')
         .select('id, status')
         .eq('project_id', id)
         .eq('status', 'processing');
       const count = data?.length ?? 0;
-      fetchJobs();
+      await fetchJobs();
       if (count > 0) {
         sawProcessing = true;
-      } else if (sawProcessing || i >= 10) {
+      } else if (sawProcessing || i >= 5) {
         setIsGenerating(false);
         return;
       }
@@ -202,7 +202,7 @@ export default function StudioProjectPage() {
     fetchJobs();
     fetchCredits();
     fetchUploadedImages();
-    const interval = setInterval(fetchJobs, 5000);
+    const interval = setInterval(fetchJobs, 2000);
     return () => clearInterval(interval);
   }, [fetchProject, fetchJobs, fetchCredits, fetchUploadedImages]);
 
