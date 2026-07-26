@@ -42,26 +42,7 @@ const ASPECT_RATIOS = [
   { id: '16:9 HD', name: 'HD', w: 1024, h: 576 },
 ];
 
-const SUGGESTIONS: Record<string, string[]> = {
-  image: [
-    "Product on a marble surface, studio lighting",
-    "Person holding a product, natural portrait",
-    "Flat lay with product and accessories",
-  ],
-  video: [
-    "Woman showing a product to camera, UGC style",
-    "Cinematic product shot rotating on marble",
-    "Before and after transformation, split screen",
-  ],
-  lipsync: [
-    "Hey everyone, welcome back to my channel!",
-    "This is the product that changed my routine.",
-  ],
-  avatar: [
-    "Hi! Let me show you why this works so well.",
-    "Three reasons you'll love this product…",
-  ],
-};
+
 
 export function PromptBar({
   isGenerating, selectedModel, onModelChange, onGenerate, onCancel, droppedImage, onDroppedImageClear,
@@ -88,8 +69,6 @@ export function PromptBar({
   const model = getModel(selectedModel);
   const isVideo = model.kind === 'video' || model.kind === 'lipsync' || model.kind === 'avatar';
   const isAudioModel = model.kind === 'voiceover' || model.kind === 'avatar';
-  const suggestions = SUGGESTIONS[model.kind] || SUGGESTIONS.image;
-
   useEffect(() => {
     if (droppedImage) {
       setUploadedImage(droppedImage);
@@ -347,21 +326,6 @@ export function PromptBar({
           >
             <X className="h-3 w-3" />
           </button>
-        </div>
-      )}
-
-      {/* Suggestion chips when empty */}
-          {!prompt.trim() && uploadedImages.length === 0 && (
-        <div className="mb-3 flex flex-wrap justify-center gap-2">
-          {suggestions.map(s => (
-            <button
-              key={s}
-              onClick={() => setPrompt(s)}
-              className="rounded-full border border-border/40 bg-gradient-to-b from-card/60 to-card/20 backdrop-blur-sm px-3.5 py-1.5 text-[13px] text-muted-foreground transition-all hover:bg-secondary hover:text-foreground hover:border-border/60 hover:shadow-sm"
-            >
-              {s}
-            </button>
-          ))}
         </div>
       )}
 
