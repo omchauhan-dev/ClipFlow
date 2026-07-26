@@ -22,7 +22,7 @@ comfyui_image = (
     .pip_install("boto3", "requests", "fastapi[standard]", "huggingface-hub>=0.30.0",
                  "hf_transfer", "Pillow", "imageio[ffmpeg]", "mako", "regex")
     .env({"HF_HUB_ENABLE_HF_TRANSFER": "1", "HF_HOME": "/models_cache/hf",
-          "FORCE_REBUILD": "2026-07-26-krea2-fix-v1"})
+          "FORCE_REBUILD": "2026-07-26-krea2-basic-scheduler-fix"})
 )
 
 WORKFLOWS_DIR = "/workflows"
@@ -62,11 +62,14 @@ _EMBEDDED_WORKFLOWS = {
         "200": {"inputs": {"clip_name": "qwen3vl_4b_fp8_scaled.safetensors", "type": "krea2"}, "class_type": "CLIPLoader"},
         "3": {"inputs": {"vae_name": "qwen_image_vae.safetensors"}, "class_type": "VAELoader"},
         "98:1": {"inputs": {"text": "", "clip": ["200", 0]}, "class_type": "CLIPTextEncode"},
-        "8": {"inputs": {"text": "bad quality, blurry", "clip": ["200", 0]}, "class_type": "CLIPTextEncode"},
         "98:2": {"inputs": {"width": 1024, "height": 1024, "batch_size": 1}, "class_type": "EmptyLatentImage"},
-        "5": {"inputs": {"model": ["4", 0], "positive": ["98:1", 0], "negative": ["8", 0], "latent_image": ["98:2", 0], "seed": 42, "steps": 8, "cfg": 1.0, "sampler_name": "er_sde", "scheduler": "simple", "denoise": 1.0}, "class_type": "KSampler"},
-        "10": {"inputs": {"samples": ["5", 0], "vae": ["3", 0]}, "class_type": "VAEDecode"},
-        "9": {"inputs": {"filename_prefix": "krea2", "images": ["10", 0]}, "class_type": "SaveImage"},
+        "18": {"inputs": {"noise_seed": 42}, "class_type": "RandomNoise"},
+        "16": {"inputs": {"sampler_name": "er_sde"}, "class_type": "KSamplerSelect"},
+        "17": {"inputs": {"model": ["4", 0], "scheduler": "simple", "steps": 8, "denoise": 1.0}, "class_type": "BasicScheduler"},
+        "156": {"inputs": {"model": ["4", 0], "conditioning": ["98:1", 0]}, "class_type": "BasicGuider"},
+        "12": {"inputs": {"noise": ["18", 0], "guider": ["156", 0], "sampler": ["16", 0], "sigmas": ["17", 0], "latent_image": ["98:2", 0]}, "class_type": "SamplerCustomAdvanced"},
+        "13": {"inputs": {"samples": ["12", 0], "vae": ["3", 0]}, "class_type": "VAEDecode"},
+        "9": {"inputs": {"filename_prefix": "krea2", "images": ["13", 0]}, "class_type": "SaveImage"},
     },
 }
 
@@ -154,10 +157,8 @@ def _build_workflow(model: str, req: dict):
         wf["98:1"]["inputs"]["text"] = prompt
         wf["98:2"]["inputs"]["width"] = width
         wf["98:2"]["inputs"]["height"] = height
-        wf["5"]["inputs"]["steps"] = steps
-        wf["5"]["inputs"]["seed"] = seed
-        if req.get("cfg") is not None:
-            wf["5"]["inputs"]["cfg"] = float(req["cfg"])
+        wf["17"]["inputs"]["steps"] = steps
+        wf["18"]["inputs"]["noise_seed"] = seed
         wf["9"]["inputs"]["filename_prefix"] = req.get("filename_prefix", "krea2")
         return wf, "png"
 
