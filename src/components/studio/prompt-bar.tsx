@@ -395,14 +395,14 @@ export function PromptBar({
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             placeholder={model.placeholder}
-            className="max-h-[240px] min-h-[44px] flex-1 resize-none border-0 bg-transparent p-0 pt-1.5 text-[15px] leading-relaxed placeholder:text-muted-foreground/60 focus-visible:ring-0 focus-visible:ring-offset-0"
+            className="max-h-[360px] min-h-[56px] flex-1 resize-none border-0 bg-transparent p-0 pt-2 text-[15px] leading-relaxed placeholder:text-muted-foreground/60 focus-visible:ring-0 focus-visible:ring-offset-0"
             onKeyDown={(e) => {
               if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
                 e.preventDefault();
                 handleSubmit();
               }
             }}
-            rows={2}
+            rows={3}
           />
         </div>
 
