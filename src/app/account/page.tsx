@@ -26,6 +26,7 @@ const PLAN_META: Record<Plan, { name: string; icon: typeof Sparkles; monthly: nu
 };
 
 const CREDIT_PACKS = [
+  { id: 'pack_test', credits: 5, price: '₹1', test: true },
   { id: 'pack_5', credits: 5, price: '$4' },
   { id: 'pack_15', credits: 15, price: '$11', popular: true },
   { id: 'pack_50', credits: 50, price: '$35' },

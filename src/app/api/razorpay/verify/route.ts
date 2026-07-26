@@ -5,6 +5,7 @@ import { createClient } from '@supabase/supabase-js';
 export const maxDuration = 30;
 
 const PACK_CREDITS: Record<string, number> = {
+  pack_test: 5,
   pack_5: 5,
   pack_15: 15,
   pack_50: 50,

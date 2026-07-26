@@ -10,6 +10,7 @@ const PLAN_AMOUNTS: Record<string, { amount: number; label: string }> = {
 
 // One-time credit packs -> { price in paise, credits granted }
 const CREDIT_PACKS: Record<string, { amount: number; credits: number; label: string }> = {
+  pack_test: { amount: 100, credits: 5, label: 'Test Pack (₹1)' },    // ₹1 test
   pack_5: { amount: 400 * 100, credits: 5, label: '5 Credits' },     // ~$4
   pack_15: { amount: 1100 * 100, credits: 15, label: '15 Credits' }, // ~$11
   pack_50: { amount: 3500 * 100, credits: 50, label: '50 Credits' }, // ~$35
