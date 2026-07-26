@@ -156,9 +156,13 @@ export function PromptBar({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ image: img, type: isVideo ? 'video' : 'image' }),
       });
-      const { prompt: generated } = await res.json();
-      if (generated) setPrompt(generated);
-    } catch { /* ignore */ }
+      const data = await res.json();
+      if (data.prompt) {
+        setPrompt(data.prompt);
+      } else {
+        alert(data.error || 'Could not analyze image');
+      }
+    } catch { alert('Failed to analyze image'); }
     setIsAnalyzing(false);
   };
 
