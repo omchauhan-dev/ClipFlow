@@ -389,7 +389,7 @@ class ComfyUIServer:
     gpu="A100-80GB:1",
     timeout=60 * 60,
     min_containers=0,
-    max_containers=3,
+    max_containers=2,
     scaledown_window=300,
     volumes={MODELS_PATH: comfyui_models_vol, "/outputs": output_vol, USERDATA_PATH: userdata_vol},
     secrets=[modal.Secret.from_name("huggingface-secret"), modal.Secret.from_name("r2-credentials")],
