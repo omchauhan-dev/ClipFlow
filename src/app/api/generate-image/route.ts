@@ -52,29 +52,18 @@ export async function POST(req: NextRequest) {
       job_id: job.id,
     };
 
-    // Fire request to Modal worker — await it so the serverless function
-    // stays alive long enough for Vercel to deliver the HTTP request.
-    let result: any = null;
-    try {
-      const res = await fetch(COMFYUI_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(modalPayload),
-      });
-      result = await res.json();
-    } catch (e) {
-      await supabase.from('jobs').update({ status: 'failed' }).eq('id', job.id);
-      return NextResponse.json({ job_id: job.id, status: 'failed', error: 'Modal worker unreachable' });
-    }
+    // Fire request to Modal worker — don't await the full response.
+    // The worker has callback_url which updates the job via /api/job-callback.
+    // Return immediately so the client can poll for status.
+    fetch(COMFYUI_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(modalPayload),
+    }).catch(async (e) => {
+      await supabase.from('jobs').update({ status: 'failed', error: 'Modal worker unreachable' }).eq('id', job.id);
+    });
 
-    if (result?.r2_url) {
-      await supabase.from('jobs').update({ status: 'completed', image_url: result.r2_url, r2_url: result.r2_url }).eq('id', job.id);
-      await sendTelegramNotification(`🖼 <b>Image Generated</b>\nModel: ${model}\nPrompt: ${cleanPrompt.slice(0, 80)}`);
-    } else {
-      await supabase.from('jobs').update({ status: 'failed', error: result?.error || 'Generation failed' }).eq('id', job.id);
-    }
-
-    return NextResponse.json({ job_id: job.id, status: result?.r2_url ? 'completed' : 'failed', r2_url: result?.r2_url || null });
+    return NextResponse.json({ job_id: job.id, status: 'processing' });
   } catch (err: any) {
     return NextResponse.json({ error: err?.message || 'Unknown error' }, { status: 500 });
   }
