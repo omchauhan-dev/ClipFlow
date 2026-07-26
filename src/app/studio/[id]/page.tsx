@@ -847,14 +847,14 @@ export default function StudioProjectPage() {
 
             {/* Preview modal */}
             <Dialog open={!!selectedJob} onOpenChange={(o) => !o && setSelectedJob(null)}>
-              <DialogContent className="max-w-3xl border-border/30 bg-background/95 backdrop-blur-xl p-1 shadow-2xl">
+              <DialogContent className="max-w-4xl border-border/30 bg-background/95 backdrop-blur-xl p-1 shadow-2xl">
                 {selectedJob && (
                   <>
                     <div className="overflow-hidden rounded-lg bg-black">
                       {getJobUrl(selectedJob).endsWith('.mp4') || selectedJob.job_type === 'video' ? (
                         <video src={getJobUrl(selectedJob)} controls autoPlay className="aspect-video w-full object-contain" />
                       ) : (
-                        <img src={getJobUrl(selectedJob)} alt="" className="aspect-video w-full object-contain" />
+                        <img src={getJobUrl(selectedJob)} alt="" className="w-full object-contain max-h-[80vh]" />
                       )}
                     </div>
                     <div className="flex items-center justify-between gap-3 p-4">
