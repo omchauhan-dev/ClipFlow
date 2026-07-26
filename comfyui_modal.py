@@ -9,7 +9,7 @@ comfyui_image = (
         index_url="https://download.pytorch.org/whl/cu124",
     )
     .run_commands(
-        "git clone --depth 1 https://github.com/comfyanonymous/ComfyUI.git /comfyui",
+        "git clone --depth 1 --branch v0.26.0 https://github.com/comfyanonymous/ComfyUI.git /comfyui",
         "cd /comfyui && pip install -r requirements.txt",
         "cd /comfyui/custom_nodes && git clone https://github.com/Lightricks/ComfyUI-LTXVideo.git",
         "cd /comfyui/custom_nodes/ComfyUI-LTXVideo && pip install -r requirements.txt 2>/dev/null || true",
@@ -22,7 +22,7 @@ comfyui_image = (
     .pip_install("boto3", "requests", "fastapi[standard]", "huggingface-hub>=0.30.0",
                  "hf_transfer", "Pillow", "imageio[ffmpeg]", "mako", "regex")
     .env({"HF_HUB_ENABLE_HF_TRANSFER": "1", "HF_HOME": "/models_cache/hf",
-          "FORCE_REBUILD": "2026-07-26-workflows-v4"})
+          "FORCE_REBUILD": "2026-07-26-krea2-fix-v1"})
 )
 
 WORKFLOWS_DIR = "/workflows"
@@ -57,9 +57,9 @@ _EMBEDDED_WORKFLOWS = {
         "13": {"inputs": {"samples": ["12", 0], "vae": ["9", 0]}, "class_type": "VAEDecode"},
         "158": {"inputs": {"filename_prefix": "ideogram4", "images": ["13", 0]}, "class_type": "SaveImage"},
     },
-    "krea2_t2i.json": {
+        "krea2_t2i.json": {
         "4": {"inputs": {"unet_name": "krea2_turbo_fp8_scaled.safetensors", "weight_dtype": "default"}, "class_type": "UNETLoader"},
-        "200": {"inputs": {"clip_name": "qwen3vl_4b_fp8_scaled.safetensors", "type": "ltxv"}, "class_type": "CLIPLoader"},
+        "200": {"inputs": {"clip_name": "qwen3vl_4b_fp8_scaled.safetensors", "type": "krea2"}, "class_type": "CLIPLoader"},
         "3": {"inputs": {"vae_name": "qwen_image_vae.safetensors"}, "class_type": "VAELoader"},
         "98:1": {"inputs": {"text": "", "clip": ["200", 0]}, "class_type": "CLIPTextEncode"},
         "8": {"inputs": {"text": "bad quality, blurry", "clip": ["200", 0]}, "class_type": "CLIPTextEncode"},

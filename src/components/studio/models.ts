@@ -45,7 +45,7 @@ export const MODELS: GenModel[] = [
     credits: 1,
     needsImage: false,
     group: 'Image',
-    desc: 'Aesthetic-first image generation (coming soon)',
+    desc: 'Aesthetic-first image generation with Krea 2',
     placeholder: 'Describe the image you want to create…',
   },
 ];
