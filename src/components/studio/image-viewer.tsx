@@ -39,7 +39,7 @@ export function ImageViewer({
   }, [prompt]);
 
   const handleDownload = useCallback(() => {
-    if (downloading || downloaded) return;
+    if (downloaded) return;
     const name = prompt ? prompt.slice(0, 40).replace(/[^a-zA-Z0-9 ]/g, '') : 'clipflow';
     const dlUrl = `/api/download?url=${encodeURIComponent(url)}&name=${encodeURIComponent(name)}`;
     const a = document.createElement('a');
@@ -48,7 +48,7 @@ export function ImageViewer({
     a.click();
     setDownloaded(true);
     setTimeout(() => setDownloaded(false), 2000);
-  }, [url, prompt, downloading, downloaded]);
+  }, [url, prompt, downloaded]);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
