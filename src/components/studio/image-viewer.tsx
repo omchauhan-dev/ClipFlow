@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Download, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, Download, ChevronLeft, ChevronRight, Copy, Check } from 'lucide-react';
 
 interface ImageViewerProps {
   isOpen: boolean;
@@ -27,6 +27,15 @@ export function ImageViewer({
   hasPrev,
   hasNext,
 }: ImageViewerProps) {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = useCallback(() => {
+    if (prompt) {
+      navigator.clipboard.writeText(prompt);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  }, [prompt]);
+
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -122,11 +131,15 @@ export function ImageViewer({
               />
             )}
 
-            {/* Prompt caption */}
+            {/* Copy prompt */}
             {prompt && (
-              <p className="max-w-2xl text-center text-sm text-white/60 px-4 pb-2">
-                {prompt}
-              </p>
+              <button
+                onClick={(e) => { e.stopPropagation(); handleCopy(); }}
+                className="flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm text-white/70 backdrop-blur transition-colors hover:bg-white/20 hover:text-white"
+              >
+                {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                {copied ? 'Copied' : 'Copy prompt'}
+              </button>
             )}
           </motion.div>
         </motion.div>
