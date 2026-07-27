@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { PromptBar } from '@/components/studio/prompt-bar';
 import { EmptyCanvas } from '@/components/studio/empty-canvas';
 import { getModel, endpointFor, type GenModel } from '@/components/studio/models';
+import { ImageViewer } from '@/components/studio/image-viewer';
 
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -49,6 +50,8 @@ export default function StudioProjectPage() {
   const [generationStart, setGenerationStart] = useState<number>(0);
   const [elapsed, setElapsed] = useState(0);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+  const completedJobs = jobs.filter(j => j.status === 'completed' && getJobUrl(j));
+  const currentIdx = selectedJob ? completedJobs.findIndex(j => j.id === selectedJob.id) : -1;
   const [droppedImage, setDroppedImage] = useState<string | null>(null);
   const [droppedAudio, setDroppedAudio] = useState<string | null>(null);
   const [credits, setCredits] = useState(0);
@@ -845,34 +848,18 @@ export default function StudioProjectPage() {
             </div>
           )}
 
-            {/* Preview modal */}
-            <Dialog open={!!selectedJob} onOpenChange={(o) => !o && setSelectedJob(null)}>
-              <DialogContent className="max-w-5xl border-border/30 bg-background/95 backdrop-blur-xl p-0 shadow-2xl [&>button]:!top-3 [&>button]:!right-3 [&>button]:!bg-background/80 [&>button]:!text-foreground [&>button]:!rounded-full [&>button]:!h-8 [&>button]:!w-8">
-                {selectedJob && (
-                  <div className="flex flex-col">
-                    <div className="flex items-center justify-center bg-black">
-                      {getJobUrl(selectedJob).endsWith('.mp4') || selectedJob.job_type === 'video' ? (
-                        <video src={getJobUrl(selectedJob)} controls autoPlay className="max-h-[80vh] w-full object-contain" />
-                      ) : (
-                        <img src={getJobUrl(selectedJob)} alt="" className="max-h-[80vh] w-full object-contain" />
-                      )}
-                    </div>
-                    <div className="flex items-center justify-between gap-3 bg-background/95 px-5 py-3">
-                      <p className="flex-1 truncate text-sm text-muted-foreground">{selectedJob.prompt}</p>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => window.open(getJobUrl(selectedJob), '_blank')}
-                        className="h-8 gap-1.5 rounded-lg text-xs shrink-0"
-                      >
-                        <Download className="h-3.5 w-3.5" />
-                        Download
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </DialogContent>
-            </Dialog>
+            {/* Image viewer */}
+            <ImageViewer
+              isOpen={!!selectedJob}
+              onClose={() => setSelectedJob(null)}
+              url={selectedJob ? getJobUrl(selectedJob) : ''}
+              prompt={selectedJob?.prompt}
+              isVideo={selectedJob ? getJobUrl(selectedJob).endsWith('.mp4') || selectedJob.job_type === 'video' : false}
+              onPrev={() => currentIdx > 0 && setSelectedJob(completedJobs[currentIdx - 1])}
+              onNext={() => currentIdx < completedJobs.length - 1 && setSelectedJob(completedJobs[currentIdx + 1])}
+              hasPrev={currentIdx > 0}
+              hasNext={currentIdx < completedJobs.length - 1}
+            />
 
             {/* Upgrade dialog */}
             <Dialog open={showUpgrade} onOpenChange={setShowUpgrade}>
