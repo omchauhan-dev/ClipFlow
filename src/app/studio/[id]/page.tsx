@@ -354,8 +354,9 @@ export default function StudioProjectPage() {
   }
 
   function DurationBadge({ createdAt, completedAt }: { createdAt: string; completedAt?: string }) {
-    const end = completedAt ? new Date(completedAt).getTime() : Date.now();
-    const ms = end - new Date(createdAt).getTime();
+    if (!completedAt) return null;
+    const ms = new Date(completedAt).getTime() - new Date(createdAt).getTime();
+    if (ms < 0) return null;
     const s = Math.floor(ms / 1000);
     if (s < 60) return <span className="mt-0.5 block text-[10px] text-white/40">{s}s</span>;
     const m = Math.floor(s / 60);
