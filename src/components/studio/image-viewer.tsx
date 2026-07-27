@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useCallback, useState } from 'react';
+import { useEffect, useCallback, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Download, ChevronLeft, ChevronRight, Copy, Check } from 'lucide-react';
 
@@ -16,6 +16,12 @@ interface ImageViewerProps {
   hasNext?: boolean;
 }
 
+const slideVariants = {
+  enter: (dir: number) => ({ x: dir * 400, opacity: 0 }),
+  center: { x: 0, opacity: 1 },
+  exit: (dir: number) => ({ x: dir * -400, opacity: 0 }),
+};
+
 export function ImageViewer({
   isOpen,
   onClose,
@@ -28,6 +34,9 @@ export function ImageViewer({
   hasNext,
 }: ImageViewerProps) {
   const [copied, setCopied] = useState(false);
+  const [dir, setDir] = useState(0);
+  const dirRef = useRef(0);
+
   const handleCopy = useCallback(() => {
     if (prompt) {
       navigator.clipboard.writeText(prompt);
@@ -36,13 +45,16 @@ export function ImageViewer({
     }
   }, [prompt]);
 
+  const goNext = useCallback(() => { dirRef.current = 1; setDir(1); onNext?.(); }, [onNext]);
+  const goPrev = useCallback(() => { dirRef.current = -1; setDir(-1); onPrev?.(); }, [onPrev]);
+
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
-      if (e.key === 'ArrowLeft' && hasPrev) onPrev?.();
-      if (e.key === 'ArrowRight' && hasNext) onNext?.();
+      if (e.key === 'ArrowLeft' && hasPrev) goPrev();
+      if (e.key === 'ArrowRight' && hasNext) goNext();
     },
-    [onClose, onPrev, onNext, hasPrev, hasNext]
+    [onClose, goPrev, goNext, hasPrev, hasNext]
   );
 
   useEffect(() => {
@@ -67,10 +79,8 @@ export function ImageViewer({
           className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-black via-zinc-950 to-black"
           onClick={onClose}
         >
-          {/* Glass backdrop */}
           <div className="absolute inset-0 bg-white/[0.02] backdrop-blur-sm" />
 
-          {/* Close button */}
           <button
             onClick={onClose}
             className="absolute top-5 right-5 z-10 flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/60 backdrop-blur-xl transition-all hover:border-white/20 hover:bg-white/10 hover:text-white"
@@ -78,7 +88,6 @@ export function ImageViewer({
             <X className="h-5 w-5" />
           </button>
 
-          {/* Download button */}
           <a
             href={url}
             download
@@ -90,64 +99,75 @@ export function ImageViewer({
             <Download className="h-5 w-5" />
           </a>
 
-          {/* Previous button */}
           {hasPrev && (
             <button
-              onClick={(e) => { e.stopPropagation(); onPrev?.(); }}
+              onClick={(e) => { e.stopPropagation(); goPrev(); }}
               className="absolute left-5 top-1/2 -translate-y-1/2 z-10 flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/60 backdrop-blur-xl transition-all hover:border-white/20 hover:bg-white/10 hover:text-white"
             >
               <ChevronLeft className="h-6 w-6" />
             </button>
           )}
 
-          {/* Next button */}
           {hasNext && (
             <button
-              onClick={(e) => { e.stopPropagation(); onNext?.(); }}
+              onClick={(e) => { e.stopPropagation(); goNext(); }}
               className="absolute right-5 top-1/2 -translate-y-1/2 z-10 flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/60 backdrop-blur-xl transition-all hover:border-white/20 hover:bg-white/10 hover:text-white"
             >
               <ChevronRight className="h-6 w-6" />
             </button>
           )}
 
-          {/* Image/Video */}
-          <motion.div
-            key={url}
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.25, ease: 'easeOut' }}
-            className="relative flex flex-col items-center gap-5 px-4"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Glass frame */}
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3 backdrop-blur-2xl shadow-2xl shadow-black/50">
-              {isVideo ? (
-                <video
-                  src={url}
-                  controls
-                  autoPlay
-                  className="max-h-[80vh] max-w-full rounded-xl"
-                />
-              ) : (
-                <img
-                  src={url}
-                  alt={prompt || ''}
-                  className="max-h-[80vh] max-w-full rounded-xl object-contain"
-                />
-              )}
-            </div>
-
-            {/* Copy prompt */}
-            {prompt && (
-              <button
-                onClick={(e) => { e.stopPropagation(); handleCopy(); }}
-                className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-5 py-2.5 text-sm text-white/60 backdrop-blur-xl transition-all hover:border-white/20 hover:bg-white/10 hover:text-white"
+          <div className="relative flex flex-col items-center gap-5 px-4" onClick={(e) => e.stopPropagation()}>
+            <AnimatePresence mode="popLayout" custom={dirRef.current}>
+              <motion.div
+                key={url}
+                custom={dirRef.current}
+                variants={slideVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                layout
               >
-                {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                {copied ? 'Copied' : 'Copy prompt'}
-              </button>
-            )}
-          </motion.div>
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3 backdrop-blur-2xl shadow-2xl shadow-black/50">
+                  {isVideo ? (
+                    <video
+                      src={url}
+                      controls
+                      autoPlay
+                      className="max-h-[80vh] max-w-full rounded-xl"
+                    />
+                  ) : (
+                    <img
+                      src={url}
+                      alt={prompt || ''}
+                      className="max-h-[80vh] max-w-full rounded-xl object-contain"
+                    />
+                  )}
+                </div>
+              </motion.div>
+            </AnimatePresence>
+
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={url + '-copy'}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.15 }}
+              >
+                {prompt && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleCopy(); }}
+                    className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-5 py-2.5 text-sm text-white/60 backdrop-blur-xl transition-all hover:border-white/20 hover:bg-white/10 hover:text-white"
+                  >
+                    {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                    {copied ? 'Copied' : 'Copy prompt'}
+                  </button>
+                )}
+              </motion.div>
+            </AnimatePresence>
+          </div>
         </motion.div>
       )}
     </AnimatePresence>
