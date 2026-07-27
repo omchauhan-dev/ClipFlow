@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
   const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
 
   if (status === 'completed' && r2_url) {
-    await supabase.from('jobs').update({ status: 'completed', image_url: r2_url, r2_url }).eq('id', job_id);
+    await supabase.from('jobs').update({ status: 'completed', image_url: r2_url, r2_url, completed_at: new Date().toISOString() }).eq('id', job_id);
     // Fetch job details for notification
     const { data: job } = await supabase.from('jobs').select('model, prompt').eq('id', job_id).single();
     if (job) {

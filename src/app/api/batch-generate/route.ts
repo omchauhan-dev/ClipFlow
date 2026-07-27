@@ -90,7 +90,7 @@ export async function POST(req: NextRequest) {
         if (res.ok) {
           const result = await res.json();
           const url = result.r2_url || result.output || null;
-          await supabase.from('jobs').update({ status: 'completed', image_url: url, r2_url: url }).eq('id', job.id);
+          await supabase.from('jobs').update({ status: 'completed', image_url: url, r2_url: url, completed_at: new Date().toISOString() }).eq('id', job.id);
         } else {
           await supabase.from('jobs').update({ status: 'failed' }).eq('id', job.id);
         }

@@ -90,7 +90,7 @@ export async function POST(req: NextRequest) {
         const result = await res.json();
         const outputUrl = result.r2_url || result.output || null;
         if (outputUrl) {
-          await supabase.from('jobs').update({ status: 'completed', image_url: outputUrl, r2_url: outputUrl }).eq('id', job.id);
+          await supabase.from('jobs').update({ status: 'completed', image_url: outputUrl, r2_url: outputUrl, completed_at: new Date().toISOString() }).eq('id', job.id);
           await sendTelegramNotification(`🎬 <b>Video Generated</b>\nModel: ${model}\nPrompt: ${cleanPrompt.slice(0, 80)}`);
         }
         // If no url yet, the callback_url path will finalize the job.

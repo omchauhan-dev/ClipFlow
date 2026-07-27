@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
@@ -35,6 +35,7 @@ interface Job {
   image_url?: string;
   r2_url?: string;
   created_at: string;
+  completed_at?: string;
   model?: string;
 }
 
@@ -352,12 +353,15 @@ export default function StudioProjectPage() {
     return job.r2_url || job.output_url || job.image_url || '';
   }
 
-  function DurationBadge({ createdAt }: { createdAt: string }) {
-    const elapsed = useMemo(() => Date.now() - new Date(createdAt).getTime(), [createdAt]);
-    const s = Math.floor(elapsed / 1000);
+  function DurationBadge({ createdAt, completedAt }: { createdAt: string; completedAt?: string }) {
+    const end = completedAt ? new Date(completedAt).getTime() : Date.now();
+    const ms = end - new Date(createdAt).getTime();
+    const s = Math.floor(ms / 1000);
     if (s < 60) return <span className="mt-0.5 block text-[10px] text-white/40">{s}s</span>;
     const m = Math.floor(s / 60);
-    return <span className="mt-0.5 block text-[10px] text-white/40">{m}m {s % 60}s</span>;
+    if (m < 60) return <span className="mt-0.5 block text-[10px] text-white/40">{m}m {s % 60}s</span>;
+    const h = Math.floor(m / 60);
+    return <span className="mt-0.5 block text-[10px] text-white/40">{h}h {m % 60}m</span>;
   }
 
   return (
@@ -822,7 +826,7 @@ export default function StudioProjectPage() {
                               {job.prompt}
                             </p>
                             {isCompleted && (
-                              <DurationBadge createdAt={job.created_at} />
+                              <DurationBadge createdAt={job.created_at} completedAt={job.completed_at} />
                             )}
                           </div>
                         </motion.button>
