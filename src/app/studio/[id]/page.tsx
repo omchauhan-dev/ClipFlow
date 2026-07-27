@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
@@ -350,6 +350,14 @@ export default function StudioProjectPage() {
 
   function getJobUrl(job: Job) {
     return job.r2_url || job.output_url || job.image_url || '';
+  }
+
+  function DurationBadge({ createdAt }: { createdAt: string }) {
+    const elapsed = useMemo(() => Date.now() - new Date(createdAt).getTime(), [createdAt]);
+    const s = Math.floor(elapsed / 1000);
+    if (s < 60) return <span className="mt-0.5 block text-[10px] text-white/40">{s}s</span>;
+    const m = Math.floor(s / 60);
+    return <span className="mt-0.5 block text-[10px] text-white/40">{m}m {s % 60}s</span>;
   }
 
   return (
@@ -813,6 +821,9 @@ export default function StudioProjectPage() {
                             <p className={cn('truncate text-[11px] leading-tight', isCompleted ? 'text-white/90' : 'text-muted-foreground')}>
                               {job.prompt}
                             </p>
+                            {isCompleted && (
+                              <DurationBadge createdAt={job.created_at} />
+                            )}
                           </div>
                         </motion.button>
                       </div>
