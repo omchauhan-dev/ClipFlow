@@ -131,6 +131,34 @@ supabase/       # Database migrations & seed
 
 ---
 
+## GPU Backend (ComfyUI)
+
+Manages ComfyUI workers on Modal for image/video generation.
+
+### Deploy
+
+```bash
+modal deploy comfyui_modal.py
+```
+
+### How concurrent requests work
+
+Only **1 GPU container** runs at a time. When you send 5 images at once, they queue on the same GPU:
+- 1st request loads the model (~60s) then generates (~9s)
+- Remaining 4 run immediately after, ~9s each (model already in memory)
+
+Total: ~96s for 5 images, all on one GPU — no extra cost.
+
+### Scale config (in `comfyui_modal.py`)
+
+| Setting | Value | Effect |
+|---------|-------|--------|
+| `max_containers` | 1 | Only one GPU container at a time |
+| `scaledown_window` | 300s | Container idles 5 min before shutting down |
+| `min_containers` | 0 | No GPU sitting idle when unused |
+
+---
+
 ## License
 
 MIT
