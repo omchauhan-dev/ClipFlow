@@ -7,6 +7,13 @@ const THIRTY_DAYS = 30 * 24 * 60 * 60;
 
 export const supabase = createBrowserClient(supabaseUrl, supabaseKey, {
   cookies: {
+    getAll() {
+      if (typeof document === 'undefined') return [];
+      return document.cookie.split('; ').filter(Boolean).map((c) => {
+        const [name, ...rest] = c.split('=');
+        return { name, value: rest.join('=') };
+      });
+    },
     setAll(cookies) {
       cookies.forEach(({ name, value, options }) => {
         document.cookie = `${name}=${value}; max-age=${THIRTY_DAYS}; path=/; samesite=lax; secure`;
