@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+const THIRTY_DAYS = 30 * 24 * 60 * 60;
+
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
@@ -32,7 +34,7 @@ export async function middleware(req: NextRequest) {
         },
         setAll(cookies) {
           cookies.forEach((c) => {
-            res.cookies.set(c.name, c.value);
+            res.cookies.set(c.name, c.value, { maxAge: THIRTY_DAYS, path: '/', sameSite: 'lax', secure: true });
           });
         },
       },
