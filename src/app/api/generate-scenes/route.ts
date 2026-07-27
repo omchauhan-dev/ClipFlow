@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { getOrigin } from '@/lib/request';
 
 export const maxDuration = 60;
 
@@ -71,7 +72,7 @@ export async function POST(req: NextRequest) {
       output_prefix: `scene_${project_id || 'x'}`,
       upload_to_r2: true,
       job_ids: jobIds,
-      callback_url: `${req.nextUrl.origin}/api/job-callback`,
+      callback_url: `${getOrigin(req)}/api/job-callback`,
     };
 
     // Fire and forget — Modal calls back per scene as each image finishes

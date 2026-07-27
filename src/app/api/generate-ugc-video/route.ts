@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { getOrigin } from '@/lib/request';
 import { sendTelegramNotification } from '@/lib/telegram';
 
 export const maxDuration = 60;
@@ -71,7 +72,7 @@ export async function POST(req: NextRequest) {
       resolution,
       num_segments,
       output_name: `ugc_${job.id}.mp4`,
-      callback_url: `${req.nextUrl.origin}/api/job-callback`,
+      callback_url: `${getOrigin(req)}/api/job-callback`,
       job_id: job.id,
     };
     if (text) payload.text = text;

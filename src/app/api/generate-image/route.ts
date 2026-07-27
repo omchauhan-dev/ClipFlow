@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { sendTelegramNotification } from '@/lib/telegram';
+import { getOrigin } from '@/lib/request';
 
 export const maxDuration = 300;
 
@@ -48,7 +49,7 @@ export async function POST(req: NextRequest) {
       width,
       height,
       steps: num_inference_steps,
-      callback_url: `${req.nextUrl.origin}/api/job-callback`,
+      callback_url: `${getOrigin(req)}/api/job-callback`,
       job_id: job.id,
     };
 
