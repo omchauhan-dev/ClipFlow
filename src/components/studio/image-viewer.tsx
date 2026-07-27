@@ -16,12 +16,6 @@ interface ImageViewerProps {
   hasNext?: boolean;
 }
 
-const slideVariants = {
-  enter: (dir: number) => ({ x: dir * 400, opacity: 0 }),
-  center: { x: 0, opacity: 1 },
-  exit: (dir: number) => ({ x: dir * -400, opacity: 0 }),
-};
-
 export function ImageViewer({
   isOpen,
   onClose,
@@ -34,8 +28,6 @@ export function ImageViewer({
   hasNext,
 }: ImageViewerProps) {
   const [copied, setCopied] = useState(false);
-  const [dir, setDir] = useState(0);
-  const dirRef = useRef(0);
 
   const handleCopy = useCallback(() => {
     if (prompt) {
@@ -45,16 +37,13 @@ export function ImageViewer({
     }
   }, [prompt]);
 
-  const goNext = useCallback(() => { dirRef.current = 1; setDir(1); onNext?.(); }, [onNext]);
-  const goPrev = useCallback(() => { dirRef.current = -1; setDir(-1); onPrev?.(); }, [onPrev]);
-
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
-      if (e.key === 'ArrowLeft' && hasPrev) goPrev();
-      if (e.key === 'ArrowRight' && hasNext) goNext();
+      if (e.key === 'ArrowLeft' && hasPrev) onPrev?.();
+      if (e.key === 'ArrowRight' && hasNext) onNext?.();
     },
-    [onClose, goPrev, goNext, hasPrev, hasNext]
+    [onClose, onPrev, onNext, hasPrev, hasNext]
   );
 
   useEffect(() => {
@@ -75,99 +64,74 @@ export function ImageViewer({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-black via-zinc-950 to-black"
+          transition={{ duration: 0.15 }}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
           onClick={onClose}
         >
-          <div className="absolute inset-0 bg-white/[0.02] backdrop-blur-sm" />
-
-          <button
-            onClick={onClose}
-            className="absolute top-5 right-5 z-10 flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/60 backdrop-blur-xl transition-all hover:border-white/20 hover:bg-white/10 hover:text-white"
-          >
-            <X className="h-5 w-5" />
-          </button>
-
-          <a
-            href={url}
-            download
-            target="_blank"
-            rel="noopener noreferrer"
+          <motion.div
+            key={url}
+            initial={{ scale: 0.92, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.92, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="relative flex flex-col items-center gap-3 rounded-2xl border border-white/10 bg-gradient-to-br from-zinc-900 to-black/95 p-4 backdrop-blur-2xl shadow-2xl shadow-black/60 max-w-3xl w-full"
             onClick={(e) => e.stopPropagation()}
-            className="absolute top-5 right-16 z-10 flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/60 backdrop-blur-xl transition-all hover:border-white/20 hover:bg-white/10 hover:text-white"
           >
-            <Download className="h-5 w-5" />
-          </a>
-
-          {hasPrev && (
+            {/* Close */}
             <button
-              onClick={(e) => { e.stopPropagation(); goPrev(); }}
-              className="absolute left-5 top-1/2 -translate-y-1/2 z-10 flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/60 backdrop-blur-xl transition-all hover:border-white/20 hover:bg-white/10 hover:text-white"
+              onClick={onClose}
+              className="absolute -top-2.5 -right-2.5 z-10 flex h-7 w-7 items-center justify-center rounded-full border border-white/10 bg-black/90 text-white/50 backdrop-blur transition-all hover:text-white"
             >
-              <ChevronLeft className="h-6 w-6" />
+              <X className="h-3.5 w-3.5" />
             </button>
-          )}
 
-          {hasNext && (
-            <button
-              onClick={(e) => { e.stopPropagation(); goNext(); }}
-              className="absolute right-5 top-1/2 -translate-y-1/2 z-10 flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/60 backdrop-blur-xl transition-all hover:border-white/20 hover:bg-white/10 hover:text-white"
+            {/* Download */}
+            <a
+              href={url}
+              download
+              target="_blank"
+              rel="noopener noreferrer"
+              className="absolute -top-2.5 right-7 z-10 flex h-7 w-7 items-center justify-center rounded-full border border-white/10 bg-black/90 text-white/50 backdrop-blur transition-all hover:text-white"
             >
-              <ChevronRight className="h-6 w-6" />
-            </button>
-          )}
+              <Download className="h-3.5 w-3.5" />
+            </a>
 
-          <div className="relative flex flex-col items-center gap-5 px-4" onClick={(e) => e.stopPropagation()}>
-            <AnimatePresence mode="popLayout" custom={dirRef.current}>
-              <motion.div
-                key={url}
-                custom={dirRef.current}
-                variants={slideVariants}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                layout
-              >
-                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3 backdrop-blur-2xl shadow-2xl shadow-black/50">
-                  {isVideo ? (
-                    <video
-                      src={url}
-                      controls
-                      autoPlay
-                      className="max-h-[80vh] max-w-full rounded-xl"
-                    />
-                  ) : (
-                    <img
-                      src={url}
-                      alt={prompt || ''}
-                      className="max-h-[80vh] max-w-full rounded-xl object-contain"
-                    />
-                  )}
-                </div>
-              </motion.div>
-            </AnimatePresence>
+            {/* Image/Video */}
+            {isVideo ? (
+              <video src={url} controls autoPlay className="max-h-[65vh] max-w-full rounded-xl" />
+            ) : (
+              <img src={url} alt={prompt || ''} className="max-h-[65vh] max-w-full rounded-xl object-contain" />
+            )}
 
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={url + '-copy'}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.15 }}
+            {/* Copy prompt */}
+            {prompt && (
+              <button
+                onClick={(e) => { e.stopPropagation(); handleCopy(); }}
+                className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-xs text-white/50 backdrop-blur transition-all hover:border-white/20 hover:bg-white/10 hover:text-white"
               >
-                {prompt && (
-                  <button
-                    onClick={(e) => { e.stopPropagation(); handleCopy(); }}
-                    className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-5 py-2.5 text-sm text-white/60 backdrop-blur-xl transition-all hover:border-white/20 hover:bg-white/10 hover:text-white"
-                  >
-                    {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                    {copied ? 'Copied' : 'Copy prompt'}
-                  </button>
-                )}
-              </motion.div>
-            </AnimatePresence>
-          </div>
+                {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                {copied ? 'Copied' : 'Copy prompt'}
+              </button>
+            )}
+
+            {/* Nav */}
+            {hasPrev && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onPrev?.(); }}
+                className="absolute -left-3 top-1/2 -translate-y-1/2 flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-black/90 text-white/50 backdrop-blur transition-all hover:text-white"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+            )}
+            {hasNext && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onNext?.(); }}
+                className="absolute -right-3 top-1/2 -translate-y-1/2 flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-black/90 text-white/50 backdrop-blur transition-all hover:text-white"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+            )}
+          </motion.div>
         </motion.div>
       )}
     </AnimatePresence>
