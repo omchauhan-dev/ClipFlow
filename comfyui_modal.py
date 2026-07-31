@@ -800,8 +800,8 @@ def download_models():
     dl("Lightricks/LTX-2.3-fp8", "ltx-2.3-22b-dev-fp8.safetensors", MODELS_PATH + "/checkpoints")
 
     # Distilled fp8 — needed for flf2v (first/last frame) workflow
-    print("[Download] ltx-2.3-22b-distilled-fp8 (checking raderos mirror)...")
-    dl("raderos/comfyui-models-ltx", "diffusion_models/ltx-2.3-22b-distilled-fp8.safetensors", MODELS_PATH + "/checkpoints")
+    print("[Download] ltx-2.3-22b-distilled-fp8 (Lightricks/LTX-2.3-fp8)...")
+    dl("Lightricks/LTX-2.3-fp8", "ltx-2.3-22b-distilled-fp8.safetensors", MODELS_PATH + "/checkpoints")
     dl("Lightricks/LTX-2.3", "ltx-2.3-spatial-upscaler-x2-1.1.safetensors", MODELS_PATH + "/latent_upscale_models")
     dl("Lightricks/LTX-2.3", "ltx-2.3-22b-distilled-lora-384.safetensors", MODELS_PATH + "/loras")
     dl("Comfy-Org/ltx-2.3", "split_files/loras/ltx_2.3_22b_distilled_1.1_lora_dynamic_fro09_avg_rank_111_bf16.safetensors", MODELS_PATH + "/loras")
