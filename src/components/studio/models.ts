@@ -48,6 +48,16 @@ export const MODELS: GenModel[] = [
     desc: 'Aesthetic-first image generation with Krea 2',
     placeholder: 'Describe the image you want to create…',
   },
+  {
+    id: 'ltx-2.3',
+    name: 'LTX-2.3',
+    kind: 'video',
+    credits: 2,
+    needsImage: false,
+    group: 'Video',
+    desc: 'State-of-the-art text-to-video generation',
+    placeholder: 'Describe the video you want to create…',
+  },
 ];
 
 export interface VoiceOption {
