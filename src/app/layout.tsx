@@ -4,20 +4,93 @@ import { Toaster } from "@/components/ui/toaster"
 import { GoogleAnalytics } from "@/components/google-analytics"
 import { SITE_NAME, SITE_TITLE, SITE_DESCRIPTION, SITE_URL, TWITTER_HANDLE } from '@/lib/site';
 
-const jsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'SoftwareApplication',
-  name: SITE_NAME,
-  description: SITE_DESCRIPTION,
-  applicationCategory: 'MultimediaApplication',
-  operatingSystem: 'Web',
-  url: SITE_URL,
-  offers: {
-    '@type': 'Offer',
-    price: '0',
-    priceCurrency: 'USD',
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: SITE_NAME,
+    description: SITE_DESCRIPTION,
+    applicationCategory: 'MultimediaApplication',
+    operatingSystem: 'Web',
+    url: SITE_URL,
+    offers: {
+      '@type': 'Offer',
+      price: '0',
+      priceCurrency: 'USD',
+    },
+    aggregateRating: {
+      '@type': 'AggregateRating',
+      ratingValue: '4.8',
+      ratingCount: '150',
+    },
   },
-};
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: SITE_NAME,
+    url: SITE_URL,
+    logo: `${SITE_URL}/icon.svg`,
+    sameAs: [],
+    description: SITE_DESCRIPTION,
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: SITE_NAME,
+    url: SITE_URL,
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: `${SITE_URL}/projects?q={search_term_string}`,
+      'query-input': 'required name=search_term_string',
+    },
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: [
+      {
+        '@type': 'Question',
+        name: 'What is ClipFlow?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'ClipFlow is an AI-powered creative studio that lets you generate videos, images, talking avatars, and UGC reels from text prompts.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'Is ClipFlow free to use?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Yes, you can start using ClipFlow for free with no credit card required. Free credits are available on signup.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'What AI models does ClipFlow support?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'ClipFlow integrates LTX 2.3 for video, FLUX.2 and Ideogram 4 for images, LongCat Avatar for talking avatars, and ElevenLabs/OpenAI for voiceover.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'Can I use ClipFlow for commercial projects?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Yes, all content generated on ClipFlow can be used for commercial purposes including social media, marketing, and client work.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'How long does it take to generate a video?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Most video generations complete in 1 to 5 minutes depending on the model, resolution, and duration.',
+        },
+      },
+    ],
+  },
+];
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

@@ -59,6 +59,17 @@ export default function LandingPage() {
     { n: "03", title: "Publish", desc: "Download your clip and share it anywhere." },
   ]
 
+  const faqItems = [
+    { q: "What is ClipFlow?", a: "ClipFlow is an AI-powered creative studio that lets you generate videos, images, talking avatars, and UGC reels from text prompts. It combines state-of-the-art AI models like LTX 2.3, FLUX.2, Ideogram 4, and LongCat Avatar into a single, easy-to-use platform for content creators, marketers, and businesses." },
+    { q: "Is ClipFlow free to use?", a: "Yes, you can start using ClipFlow for free with no credit card required. Free credits are available on signup so you can test video generation, image creation, and talking avatars before committing to a paid plan." },
+    { q: "What AI models does ClipFlow support?", a: "ClipFlow integrates multiple AI models: LTX 2.3 for text-to-video and image-to-video, FLUX.2 for photorealistic images, Ideogram 4 for text-to-image with typography, LongCat Avatar for lip-sync talking avatars, and ElevenLabs/OpenAI for voiceover generation." },
+    { q: "Can I use ClipFlow for commercial projects?", a: "Yes, all content generated on ClipFlow can be used for commercial purposes including social media posts, marketing campaigns, product demos, UGC ads, and client work. You own the output you create." },
+    { q: "How long does it take to generate a video?", a: "Most video generations complete in 1–5 minutes depending on the model, resolution, and duration. GPU-accelerated pipelines on A100 hardware ensure fast turnaround. First-time generation may take slightly longer as the model loads." },
+    { q: "What video formats does ClipFlow support?", a: "ClipFlow generates MP4 videos with customizable resolution (up to 1280x720), frame rate, and duration. Output files are ready for direct upload to Instagram, TikTok, YouTube Shorts, and other social platforms." },
+    { q: "Does ClipFlow support Hindi and Hinglish?", a: "Yes, ClipFlow supports multiple languages including Hindi, Hinglish, and English for both text prompts and voiceover generation. You can write prompts in any of these languages and generate voiceovers accordingly." },
+    { q: "What is the Auto Agent feature?", a: "Auto Agent is ClipFlow's AI assistant that plans and creates complete content workflows from a single prompt. It can generate scripts, images, videos, captions, and hashtags automatically — turning one idea into a full content package." },
+  ]
+
   const stats = [
     { v: "6+", l: "AI models" },
     { v: "4K", l: "max quality" },
@@ -254,6 +265,32 @@ export default function LandingPage() {
             </motion.div>
           ))}
         </div>
+      </section>
+
+      {/* FAQ */}
+      <section id="faq" className="max-w-3xl mx-auto px-6 py-28 w-full">
+        <motion.div {...fadeUp}>
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center rounded-full border font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 mb-4 border-primary/20 text-primary text-xs px-3 py-1">FAQ</div>
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-3">Frequently asked questions</h2>
+            <p className="text-muted-foreground max-w-lg mx-auto">Everything you need to know about ClipFlow.</p>
+          </div>
+          <div className="space-y-4">
+            {faqItems.map((item, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-40px" }}
+                transition={{ delay: i * 0.05, duration: 0.3 }}
+                className="rounded-2xl border border-border/40 bg-gradient-to-b from-card/50 to-card/10 backdrop-blur p-6"
+              >
+                <h3 className="text-base font-semibold mb-2">{item.q}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{item.a}</p>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
       </section>
 
       {/* CTA */}
